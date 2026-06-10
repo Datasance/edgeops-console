@@ -61,6 +61,14 @@ import Users from "../MessageBus/Users";
 
 const controllerJson = window.controllerConfig || null;
 
+function resolveAdminConsoleUrl(config: ControllerConfig | null): string | null {
+  if (!config) return null;
+  if (config.oidcAdminConsoleUrl?.trim()) return config.oidcAdminConsoleUrl.trim();
+  const issuer = config.oidcIssuerUrl?.replace(/\/+$/, "");
+  if (issuer && /\/realms\/[^/]+/.test(issuer)) return `${issuer}/console`;
+  return null;
+}
+
 function RouteWatcher() {
   const { refreshData } = useData();
   const location = useLocation();
@@ -80,6 +88,7 @@ function RouteWatcher() {
 
 export default function Layout() {
   const auth = useAuth();
+  const adminConsoleUrl = resolveAdminConsoleUrl(controllerJson);
   const returnHomeCbRef = React.useRef<(() => void) | null>(null);
   const { status, updateController, request } = useController();
   const { isDrawerOpen } = useTerminal();
@@ -382,13 +391,10 @@ export default function Layout() {
                           <MenuItem active={isActive}>NATs User Rules</MenuItem>
                         )}
                       </NavLink>
-                      {auth && (
+                      {adminConsoleUrl && (
                         <MenuItem
                           onClick={() =>
-                            window.open(
-                              `${controllerJson?.keycloakUrl}admin/${controllerJson?.keycloakRealm}/console`,
-                              "_blank",
-                            )
+                            window.open(adminConsoleUrl, "_blank")
                           }
                         >
                           IAM
