@@ -18,7 +18,6 @@ const initState = {
       user: {},
     },
     agents: [],
-    flows: [],
     microservices: [],
     applications: [],
   },
@@ -88,8 +87,8 @@ const updateData = (state, newController) => {
       byName: {},
     },
   );
-  const activeFlows = newController.applications.filter(
-    (f) => f.isActivated === true,
+  const activeApplications = newController.applications.filter(
+    (app) => app.isActivated === true,
   );
   const activeAgents = newController.agents.filter(
     (a) => a.daemonStatus === "RUNNING",
@@ -97,16 +96,17 @@ const updateData = (state, newController) => {
   const msvcsPerAgent = groupBy(
     newController.microservices.map((m) => ({
       ...m,
-      flowActive: !!find(activeFlows, (f) => m.flowId === f.id),
+      applicationActive: !!find(
+        activeApplications,
+        (app) => m.application === app.name,
+      ),
     })),
     "iofogUuid",
   );
   const activeMsvcs = activeAgents.reduce(
     (res, a) =>
       res.concat(
-        get(msvcsPerAgent, a.uuid, []).filter(
-          (m) => !!find(activeFlows, (f) => f.id === m.flowId),
-        ) || [],
+        get(msvcsPerAgent, a.uuid, []).filter((m) => m.applicationActive) || [],
       ),
     [],
   );
@@ -121,7 +121,7 @@ const updateData = (state, newController) => {
     ...state,
     controller: newController,
     applications: newController.applications,
-    activeFlows,
+    activeApplications,
     activeAgents,
     activeMsvcs,
     msvcsPerAgent,
