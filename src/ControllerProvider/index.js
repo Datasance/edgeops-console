@@ -2,25 +2,14 @@ import React from "react";
 import { useAuth } from "../auth";
 import { useFeedback } from "../Utils/FeedbackContext";
 
-const controllerJson = window.controllerConfig;
+const controllerConfig = window.controllerConfig || {};
 const IPLookUp = "http://ip-api.com/json/";
 
 const getBaseUrl = () =>
-  controllerJson.url ||
-  `${window.location.protocol}//${[window.location.hostname, controllerJson.port].join(":")}`;
+  controllerConfig.url ||
+  `${window.location.protocol}//${[window.location.hostname, controllerConfig.port].join(":")}`;
 
-const getUrl = (path) =>
-  controllerJson.dev ? `/api/controllerApi${path}` : `${getBaseUrl()}${path}`;
-
-const getHeaders = (headers) => {
-  if (controllerJson.dev) {
-    return {
-      ...headers,
-      "ECN-Api-Destination": `http://${controllerJson.ip}:${controllerJson.port}/`,
-    };
-  }
-  return headers;
-};
+const getUrl = (path) => `${getBaseUrl()}${path}`;
 
 export const ControllerContext = React.createContext();
 export const useController = () => React.useContext(ControllerContext);
@@ -57,9 +46,7 @@ const lookUpControllerInfo = async (ip) => {
 };
 
 const getControllerStatus = async () => {
-  const response = await fetch(getUrl("/api/v3/status"), {
-    headers: getHeaders({}),
-  });
+  const response = await fetch(getUrl("/api/v3/status"));
   if (response.ok) return response.json();
   console.log("Controller status unreachable", { status: response.statusText });
   return null;
@@ -92,7 +79,7 @@ export const ControllerProvider = ({ children }) => {
     try {
       const response = await fetch(getUrl(path), {
         ...options,
-        headers,
+        headers: { ...headers },
       });
 
       if (!response.ok) {
@@ -141,7 +128,7 @@ export const ControllerProvider = ({ children }) => {
   React.useEffect(() => {
     const effect = async () => {
       try {
-        const ipInfo = await lookUpControllerInfo(controllerJson.ip);
+        const ipInfo = await lookUpControllerInfo(window.location.hostname);
         dispatch({ type: "UPDATE", data: { location: ipInfo } });
       } catch (e) {
         dispatch({
@@ -150,7 +137,7 @@ export const ControllerProvider = ({ children }) => {
             location: {
               lat: "40.935",
               lon: "28.97",
-              query: controllerJson.ip,
+              query: window.location.hostname,
             },
           },
         });
