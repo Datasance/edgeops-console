@@ -8,9 +8,40 @@ import UnsavedChangesModal from "../../CustomComponent/UnsavedChangesModal";
 import { useLocation, NavLink } from "react-router-dom";
 import yaml from "js-yaml";
 import { parseCatalogMicroservice } from "../../Utils/parseCatalogMicroservice";
+import { appendImageToYamlAcc } from "../../Utils/imageArchYAML";
 import { useUnifiedYamlUpload } from "../../hooks/useUnifiedYamlUpload";
 import { useTerminal } from "../../providers/Terminal/TerminalProvider";
 import { CANONICAL_DISPLAY_CONTROLLER_API_VERSION } from "../../Utils/constants";
+import { architectures } from "../../ECNViewer/utils";
+
+const DEPLOY_ARCH_IDS = [1, 2, 3, 4] as const;
+
+const getContainerImageForArch = (
+  images: Array<{ archId?: number; containerImage?: string }> | undefined,
+  archId: number,
+) =>
+  images?.find((image) => image.archId === archId)?.containerImage ?? "";
+
+const normalizeCatalogImages = (
+  images: Array<{ archId?: number; containerImage?: string }> | undefined,
+) => {
+  if (!Array.isArray(images)) {
+    return [];
+  }
+
+  return images
+    .filter(
+      (image) =>
+        image?.archId !== undefined &&
+        image.archId >= 1 &&
+        image.archId <= 4 &&
+        image.containerImage,
+    )
+    .map(({ archId, containerImage }) => ({
+      archId: archId as number,
+      containerImage: containerImage as string,
+    }));
+};
 
 function CatalogMicroservices() {
   const [fetching, setFetching] = React.useState(true);
@@ -135,6 +166,12 @@ function CatalogMicroservices() {
   const handleEditYaml = () => {
     if (!selectedCatalogMicroservice) return;
 
+    const yamlImageKeys = (selectedCatalogMicroservice.images || []).reduce(
+      (acc: Record<string, unknown>, image: { archId?: number; containerImage?: string }) =>
+        appendImageToYamlAcc(acc, image),
+      {},
+    );
+
     const yamlObj = {
       apiVersion: CANONICAL_DISPLAY_CONTROLLER_API_VERSION,
       kind: "CatalogItem",
@@ -144,12 +181,7 @@ function CatalogMicroservices() {
       spec: {
         description: selectedCatalogMicroservice.description,
         category: selectedCatalogMicroservice.category,
-        x86: selectedCatalogMicroservice.images.find(
-          (x: any) => x.fogTypeId === 1,
-        )?.containerImage,
-        arm: selectedCatalogMicroservice.images.find(
-          (x: any) => x.fogTypeId === 2,
-        )?.containerImage,
+        ...yamlImageKeys,
         registry: selectedCatalogMicroservice.registryId,
         configExample: selectedCatalogMicroservice.configExample,
       },
@@ -184,7 +216,10 @@ function CatalogMicroservices() {
   };
 
   const postCatalogItem = async (item: any, method?: string) => {
-    const newItem = { ...item };
+    const newItem = {
+      ...item,
+      images: normalizeCatalogImages(item.images),
+    };
     setLoadingMessage(
       method === "PATCH" ? "Catalog Updating..." : "Catalog Adding...",
     );
@@ -293,24 +328,13 @@ function CatalogMicroservices() {
         );
       },
     },
-    {
-      key: "images",
-      header: "x86",
+    ...DEPLOY_ARCH_IDS.map((archId) => ({
+      key: `images-${archId}`,
+      header: architectures[archId],
       render: (row: any) => (
-        <span>
-          {row.images.find((x: any) => x.fogTypeId === 1)?.containerImage}
-        </span>
+        <span>{getContainerImageForArch(row.images, archId) || "-"}</span>
       ),
-    },
-    {
-      key: "images",
-      header: "ARM",
-      render: (row: any) => (
-        <span>
-          {row.images.find((x: any) => x.fogTypeId === 2)?.containerImage}
-        </span>
-      ),
-    },
+    })),
     {
       key: "category",
       header: "Category",
@@ -396,23 +420,18 @@ function CatalogMicroservices() {
       render: (node: any) => {
         const images = node?.images || [];
 
-        if (!Array.isArray(images) || images.length === 0) {
-          return (
-            <div className="text-sm text-gray-400">No images available.</div>
-          );
-        }
-
-        const tableData = images.map((route: any, index: number) => ({
-          fogTypeId: route.fogTypeId || "-",
-          containerImage: route.containerImage || "-",
+        const tableData = DEPLOY_ARCH_IDS.map((archId) => ({
+          archId,
+          architecture: architectures[archId],
+          containerImage: getContainerImageForArch(images, archId) || "-",
         }));
 
-        const columns = [
+        const imageColumns = [
           {
-            key: "fogTypeId",
-            header: "Fog Type Id",
+            key: "architecture",
+            header: "Architecture",
             formatter: ({ row }: any) => (
-              <span className="text-white">{row.fogTypeId}</span>
+              <span className="text-white">{row.architecture}</span>
             ),
           },
           {
@@ -426,9 +445,9 @@ function CatalogMicroservices() {
 
         return (
           <CustomDataTable
-            columns={columns}
+            columns={imageColumns}
             data={tableData}
-            getRowKey={(row: any) => row.key}
+            getRowKey={(row: any) => row.archId}
           />
         );
       },
