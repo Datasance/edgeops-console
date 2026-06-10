@@ -21,12 +21,12 @@ declare module "*.gif" {
 }
 
 interface ControllerConfig {
-  keycloakUrl?: string;
-  keycloakRealm?: string;
-  keycloakClientId?: string;
   port?: number;
-  dev?: boolean;
+  oidcIssuerUrl?: string;
+  oidcClientId?: string;
+  oidcAdminConsoleUrl?: string;
   url?: string;
+  controlPlane?: string;
 }
 
 interface Window {

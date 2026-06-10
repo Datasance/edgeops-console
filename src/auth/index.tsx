@@ -11,8 +11,8 @@ import { AuthProvider as OidcProvider, useAuth } from "react-oidc-context";
 const controllerConfig = window.controllerConfig || {};
 
 const oidcConfig = {
-  authority: `${controllerConfig.keycloakUrl!}realms/${controllerConfig.keycloakRealm!}`,
-  client_id: controllerConfig.keycloakClientId,
+  authority: controllerConfig.oidcIssuerUrl!,
+  client_id: controllerConfig.oidcClientId,
   redirect_uri: window.location.origin,
   response_type: "code",
   scope: "openid profile email",
@@ -21,8 +21,8 @@ const oidcConfig = {
   silent_redirect_uri: `${window.location.origin}/silent-renew.html`,
 };
 
-type KeycloakAuthContextType = {
-  keycloak: ReturnType<typeof useAuth>;
+type OidcAuthContextType = {
+  oidc: ReturnType<typeof useAuth>;
   initialized: boolean;
   token?: string;
   isAuthenticated: boolean;
@@ -30,9 +30,9 @@ type KeycloakAuthContextType = {
   hasRole: (role: string) => boolean;
 };
 
-const KeycloakAuthContext = createContext<KeycloakAuthContextType | null>(null);
+const OidcAuthContext = createContext<OidcAuthContextType | null>(null);
 
-const KeycloakProviderContent: FC<{ children: ReactNode }> = ({ children }) => {
+const OidcProviderContent: FC<{ children: ReactNode }> = ({ children }) => {
   const auth = useAuth();
   const [initialized, setInitialized] = useState(false);
 
@@ -57,47 +57,36 @@ const KeycloakProviderContent: FC<{ children: ReactNode }> = ({ children }) => {
     };
   }, [auth]);
 
-  const profile = auth?.user?.profile as
-    | { realm_access?: { roles?: string[] } }
-    | undefined;
-
-  const authValue: KeycloakAuthContextType = {
-    keycloak: auth,
+  const authValue: OidcAuthContextType = {
+    oidc: auth,
     initialized,
     token: auth.user?.access_token,
     isAuthenticated: auth.isAuthenticated,
     logout: () => auth.signoutRedirect(),
-    hasRole: (role: string) =>
-      Array.isArray(profile?.realm_access?.roles)
-        ? profile.realm_access.roles.includes(role)
-        : false,
+    hasRole: () => false,
   };
 
   return (
-    <KeycloakAuthContext.Provider value={authValue}>
+    <OidcAuthContext.Provider value={authValue}>
       {children}
-    </KeycloakAuthContext.Provider>
+    </OidcAuthContext.Provider>
   );
 };
 
-export const KeycloakAuthProvider: FC<{ children: ReactNode }> = ({
-  children,
-}) => {
+export const OidcAuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   return (
     <OidcProvider {...oidcConfig}>
-      <KeycloakProviderContent>{children}</KeycloakProviderContent>
+      <OidcProviderContent>{children}</OidcProviderContent>
     </OidcProvider>
   );
 };
 
-export const useKeycloakAuth = (): KeycloakAuthContextType => {
-  const context = useContext(KeycloakAuthContext);
+export const useOidcAuth = (): OidcAuthContextType => {
+  const context = useContext(OidcAuthContext);
   if (!context) {
-    throw new Error(
-      "useKeycloakAuth must be used within a KeycloakAuthProvider",
-    );
+    throw new Error("useOidcAuth must be used within an OidcAuthProvider");
   }
   return context;
 };
 
-export { useKeycloakAuth as useAuth };
+export { useOidcAuth as useAuth };

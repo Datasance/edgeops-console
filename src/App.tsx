@@ -14,7 +14,7 @@ import ThemeContext from "./Theme/ThemeProvider";
 import { ConfigProvider } from "./providers/Config";
 import { PollingConfigProvider } from "./providers/PollingConfig/PollingConfigProvider";
 import "./styles/tailwind.css";
-import { KeycloakAuthProvider } from "./auth";
+import { OidcAuthProvider } from "./auth";
 import "immutable";
 import "xterm/css/xterm.css";
 
@@ -28,7 +28,7 @@ function App() {
   }, []);
 
   return (
-    <KeycloakAuthProvider>
+    <OidcAuthProvider>
       <CssBaseline />
       <ThemeContext>
         <DndProvider backend={HTML5Backend}>
@@ -49,7 +49,7 @@ function App() {
           </FeedbackContext>
         </DndProvider>
       </ThemeContext>
-    </KeycloakAuthProvider>
+    </OidcAuthProvider>
   );
 }
 
