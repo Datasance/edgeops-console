@@ -12,7 +12,12 @@ import CryptoTextBox from "../../CustomComponent/CustomCryptoTextBox";
 import "ace-builds/src-noconflict/ace";
 import "ace-builds/src-noconflict/theme-tomorrow";
 import "ace-builds/src-noconflict/mode-yaml";
-import { getTextColor, MiBFactor, prettyBytes } from "../../ECNViewer/utils";
+import {
+  formatArchitectureLabel,
+  getTextColor,
+  MiBFactor,
+  prettyBytes,
+} from "../../ECNViewer/utils";
 import { StatusColor, StatusType } from "../../Utils/Enums/StatusColor";
 import { NavLink } from "react-router-dom";
 import { useLocation } from "react-router-dom";
@@ -521,6 +526,11 @@ function NodesList() {
       header: "Container Engine",
     },
     {
+      key: "architecture",
+      header: "Architecture",
+      render: (row: any) => formatArchitectureLabel(row),
+    },
+    {
       key: "memoryUsage",
       header: "Memory Usage",
       render: (row: any) => (
@@ -693,9 +703,8 @@ function NodesList() {
       render: (node: any) => node.containerEngine || "N/A",
     },
     {
-      label: "Arch",
-      render: (node: any) =>
-        node.fogTypeId === 0 ? "Auto" : node.fogTypeId === 1 ? "x86" : "arm",
+      label: "Architecture",
+      render: (node: any) => formatArchitectureLabel(node),
     },
     {
       label: "IP Address",

@@ -25,10 +25,23 @@ export const tagColor = theme.colors.neutral_3;
 export const dateFormat = "YYYY/MM/DD hh:mm:ss a";
 export const MiBFactor = 1048576;
 
-export const fogTypes = {
-  0: "auto-detect",
-  1: "x86",
-  2: "ARM",
+export const architectures = {
+  0: "auto",
+  1: "amd64",
+  2: "arm64",
+  3: "riscv64",
+  4: "arm",
+};
+
+export const formatArchitectureLabel = (agent) => {
+  if (agent?.arch?.name) {
+    return agent.arch.name;
+  }
+  const archId = agent?.archId;
+  if (archId !== undefined && archId !== null) {
+    return architectures[archId] ?? "N/A";
+  }
+  return "N/A";
 };
 
 export const icons = {

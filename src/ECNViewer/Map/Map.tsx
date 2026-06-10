@@ -15,7 +15,10 @@ import "ace-builds/src-noconflict/theme-tomorrow";
 import "ace-builds/src-noconflict/mode-yaml";
 import { MiBFactor, prettyBytes } from "../utils";
 import { StatusColor, StatusType } from "../../Utils/Enums/StatusColor";
-import { getTextColor } from "../../ECNViewer/utils";
+import {
+  formatArchitectureLabel,
+  getTextColor,
+} from "../../ECNViewer/utils";
 import { NavLink } from "react-router-dom";
 import { useTerminal } from "../../providers/Terminal/TerminalProvider";
 import { useLogViewer } from "../../providers/LogViewer/LogViewerProvider";
@@ -624,9 +627,8 @@ const Map: React.FC<CustomLeafletProps> = ({ collapsed }) => {
       render: (node: any) => node.containerEngine || "N/A",
     },
     {
-      label: "Arch",
-      render: (node: any) =>
-        node.fogTypeId === 0 ? "Auto" : node.fogTypeId === 1 ? "x86" : "arm",
+      label: "Architecture",
+      render: (node: any) => formatArchitectureLabel(node),
     },
     {
       label: "IP Address",
