@@ -1,5 +1,6 @@
 import yaml from "js-yaml";
 import { CANONICAL_DISPLAY_CONTROLLER_API_VERSION } from "./constants";
+import { appendImageToYamlAcc } from "./imageArchYAML";
 
 interface Agent {
   uuid: string;
@@ -50,18 +51,9 @@ export const getMicroserviceYAMLFromJSON = ({
           reducedAgents.byUUID[microservice.iofogUuid]?.name ??
           "__UNKNOWN__",
       },
-      images: microservice.images.reduce(
-        (acc: any, image: any) => {
-          switch (image.fogTypeId) {
-            case 1:
-              acc.x86 = image.containerImage;
-              break;
-            case 2:
-              acc.arm = image.containerImage;
-              break;
-          }
-          return acc;
-        },
+      images: (microservice.images || []).reduce(
+        (acc: Record<string, unknown>, image: any) =>
+          appendImageToYamlAcc(acc, image),
         {
           registry: microservice.registryId,
           catalogId: microservice.catalogItemId,

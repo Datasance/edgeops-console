@@ -3,6 +3,7 @@ import {
   isAllowedControllerApiVersion,
   invalidControllerApiVersionMessage,
 } from "./constants";
+import { mapYamlImagesToArray } from "./imageArchYAML";
 
 export const parseCatalogMicroservice = async (doc) => {
   if (!doc) {
@@ -28,24 +29,7 @@ export const parseCatalogMicroservice = async (doc) => {
 
   const spec = lget(doc, "spec", {});
 
-  // Parse images: YAML has x86 and arm keys, convert to array format with fogTypeId
-  const images = [];
-  const x86Image = lget(spec, "x86");
-  const armImage = lget(spec, "arm");
-
-  if (x86Image) {
-    images.push({
-      fogTypeId: 1,
-      containerImage: x86Image,
-    });
-  }
-
-  if (armImage) {
-    images.push({
-      fogTypeId: 2,
-      containerImage: armImage,
-    });
-  }
+  const images = mapYamlImagesToArray(spec);
 
   const apiObject = {
     name: name,

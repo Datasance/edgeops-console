@@ -1,21 +1,5 @@
 import lget from "lodash/get";
-
-const mapImages = (images) => {
-  const imgs = [];
-  if (images.x86) {
-    imgs.push({
-      fogTypeId: 1,
-      containerImage: images.x86,
-    });
-  }
-  if (images.arm) {
-    imgs.push({
-      fogTypeId: 2,
-      containerImage: images.arm,
-    });
-  }
-  return imgs;
-};
+import { mapYamlImagesToArray } from "./imageArchYAML";
 
 const parseMicroserviceImages = async (fileImages) => {
   // Support both catalogId and catalogItemId (YAML uses catalogId, but API uses catalogItemId)
@@ -31,7 +15,7 @@ const parseMicroserviceImages = async (fileImages) => {
     remote: 1,
     local: 2,
   };
-  const images = mapImages(fileImages);
+  const images = mapYamlImagesToArray(fileImages);
   const registryId = fileImages.registry
     ? registryByName[fileImages.registry] ||
       window.parseInt(fileImages.registry)

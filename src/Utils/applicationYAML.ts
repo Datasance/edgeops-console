@@ -1,5 +1,6 @@
 import yaml from "js-yaml";
 import { CANONICAL_DISPLAY_CONTROLLER_API_VERSION } from "./constants";
+import { appendImageToYamlAcc } from "./imageArchYAML";
 
 interface Agent {
   uuid: string;
@@ -60,17 +61,8 @@ export const getApplicationYAMLFromJSON = ({
           "__UNKNOWN__",
       },
       images: (ms.images || []).reduce(
-        (acc: any, image: any) => {
-          switch (image.fogTypeId) {
-            case 1:
-              acc.x86 = image.containerImage;
-              break;
-            case 2:
-              acc.arm = image.containerImage;
-              break;
-          }
-          return acc;
-        },
+        (acc: Record<string, unknown>, image: any) =>
+          appendImageToYamlAcc(acc, image),
         {
           registry: ms.registryId ?? null,
           catalogId: ms.catalogItemId ?? null,
