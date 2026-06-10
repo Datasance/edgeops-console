@@ -37,10 +37,6 @@ const updateData = (state, newController) => {
   if (!newController) {
     return state;
   }
-  // newController.agents = newController.agents.map(a => ({
-  //   ...a,
-  //   edgeResources: [...a.edgeResources, ...a.edgeResources, ...a.edgeResources, ...a.edgeResources, ...a.edgeResources]
-  // }))
   newController.agents.sort((a, b) => {
     const statusOrder = {
       RUNNING: 1,

@@ -66,7 +66,7 @@ it("renders Active resources and Agent list", () => {
   expect(getByText("Microservices")).toBeInTheDocument();
 });
 
-it("fetches controller GPS coordinates, authenticates and fetches for agents and flows", () => {
+it("fetches controller GPS coordinates, authenticates and fetches agents and applications", () => {
   let rendered = {};
   act(() => {
     rendered = render(<App />);

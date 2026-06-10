@@ -88,22 +88,6 @@ export default function getStyle(theme) {
     disabledAction: {
       opacity: 0.4,
     },
-    edgeResource: {
-      display: "flex",
-      alignItems: "center",
-      paddingBottom: "5px",
-    },
-    erIconContainer: {
-      backgroundColor: `var(--color, ${theme.colors.neutral})`,
-      height: "38px",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    erIcon: {
-      fontSize: 22,
-      color: theme.colors.neutral,
-    },
     link: {
       color: theme.colors.neutral,
       cursor: "pointer",
