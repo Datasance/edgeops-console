@@ -65,7 +65,7 @@
   "proxy": "http://localhost:5555",
   "scripts": {
     "start": "npm run build && npm run prod",
-    "start-dev": "cp controller-config.prod.js ./public/controller-config.js && react-scripts --openssl-legacy-provider start",
+    "start-dev": "cp controller-config.dev.js ./public/controller-config.js && react-scripts --openssl-legacy-provider start",
     "prod": "node server/index.js",
     "build": "cp controller-config.prod.js ./public/controller-config.js && GENERATE_SOURCEMAP=false react-scripts build",
     "test": "CI=true react-scripts test",

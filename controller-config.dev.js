@@ -1,10 +1,6 @@
 window.controllerConfig = {
-  ip: '0.0.0.0',
   port: '51121',
+  oidcIssuerUrl: 'http://localhost:8080/realms/datasance',
+  oidcClientId: 'ecn-viewer',
   refresh: 3000,
-  dev: true,
-  user: {
-    email: 'user@domain.com',
-    password: '#Bugs4Fun'
-  }
 }
