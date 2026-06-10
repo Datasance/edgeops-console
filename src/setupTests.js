@@ -4,9 +4,4 @@
  */
 require("./setupTextEncoder.js");
 
-const { configure } = require("enzyme");
-require("jest-enzyme");
-const Adapter = require("enzyme-adapter-react-16").default;
-require("@testing-library/jest-dom/extend-expect");
-
-configure({ adapter: new Adapter() });
+require("@testing-library/jest-dom");

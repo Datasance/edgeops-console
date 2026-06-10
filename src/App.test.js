@@ -32,9 +32,9 @@ beforeAll(() => {
       case getUrl("/api/v3/iofog-list"):
         expect(options.headers.Authorization).toBe("test");
         return Promise.resolve({ fogs: [] });
-      case getUrl("/api/v3/flow"):
+      case getUrl("/api/v3/application"):
         expect(options.headers.Authorization).toBe("test");
-        return Promise.resolve({ flows: [] });
+        return Promise.resolve({ applications: [] });
       default:
         return Promise.reject(new Error(`Could not match URL: ${url}`));
     }
