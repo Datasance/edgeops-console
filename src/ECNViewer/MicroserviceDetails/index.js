@@ -46,6 +46,7 @@ import {
   invalidControllerApiVersionMessage,
 } from "../../Utils/constants";
 import { parseMicroservice } from "../../Utils/ApplicationParser";
+import { appendImageToYamlAcc } from "../../Utils/imageArchYAML";
 
 export default function MicroserviceDetails({
   microservice: selectedMicroservice,
@@ -101,11 +102,16 @@ export default function MicroserviceDetails({
     if (!agent) {
       return "--";
     }
-    for (const img of microservice.images) {
+    const images = m?.images;
+    if (!Array.isArray(images)) {
+      return "--";
+    }
+    for (const img of images) {
       if (img.archId === agent.archId) {
-        return img.containerImage;
+        return img.containerImage ?? "--";
       }
     }
+    return "--";
   };
 
   const env = microservice.env.filter(
@@ -372,18 +378,8 @@ export default function MicroserviceDetails({
         agent: {
           name: agent?.name,
         },
-        images: app.images.reduce(
-          (acc, image) => {
-            switch (image.fogTypeId) {
-              case 1:
-                acc.x86 = image.containerImage;
-                break;
-              case 2:
-                acc.arm = image.containerImage;
-                break;
-            }
-            return acc;
-          },
+        images: (app.images || []).reduce(
+          (acc, image) => appendImageToYamlAcc(acc, image),
           {
             registry: app.registryId,
             catalogId: app.catalogItemId,

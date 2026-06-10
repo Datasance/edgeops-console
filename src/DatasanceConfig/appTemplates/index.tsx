@@ -21,6 +21,7 @@ import {
   isAllowedControllerApiVersion,
   invalidControllerApiVersionMessage,
 } from "../../Utils/constants";
+import { appendImageToYamlAcc } from "../../Utils/imageArchYAML";
 
 function AppTemplates() {
   const [fetching, setFetching] = React.useState(true);
@@ -285,17 +286,8 @@ function AppTemplates() {
           name: ms.agentName,
         },
         images: (ms.images || []).reduce(
-          (acc: any, image: any) => {
-            switch (image.fogTypeId) {
-              case 1:
-                acc.x86 = image.containerImage;
-                break;
-              case 2:
-                acc.arm = image.containerImage;
-                break;
-            }
-            return acc;
-          },
+          (acc: Record<string, unknown>, image: { archId?: number; containerImage?: string }) =>
+            appendImageToYamlAcc(acc, image),
           {
             registry: ms.registryId ?? null,
             catalogId: ms.catalogItemId ?? null,
