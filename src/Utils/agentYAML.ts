@@ -22,6 +22,24 @@ const toArchLabel = (archId: number | string | undefined) => {
   return ARCH_ID_TO_LABEL[id] ?? "auto";
 };
 
+/** YAML-only or nested keys — never sent on POST/PATCH. */
+const AGENT_YAML_ONLY_KEYS = ["arch", "routerConfig", "natsConfig", "fogType"];
+
+/** v3.7 wire keys — greenfield; strip if present in uploaded YAML. */
+const AGENT_LEGACY_WIRE_KEYS = [
+  "fogType",
+  "fogTypeId",
+  "dockerUrl",
+  "dockerPruningFrequency",
+];
+
+const sanitizeAgentWireBody = (body: Record<string, unknown>) => {
+  for (const key of [...AGENT_YAML_ONLY_KEYS, ...AGENT_LEGACY_WIRE_KEYS]) {
+    delete body[key];
+  }
+  return body;
+};
+
 const toArchIdValue = (arch: string | number | undefined) => {
   if (arch === undefined || arch === null || arch === "") {
     return 0;
@@ -123,6 +141,53 @@ export const buildAgentYamlObject = (agent: any) => {
 export const dumpAgentYAML = (agent: any) =>
   yaml.dump(buildAgentYamlObject(agent), { noRefs: true, indent: 2 });
 
+const buildAgentWireBodyFromDoc = (doc: any) => {
+  const metadata = doc?.metadata ?? {};
+  const spec = doc?.spec ?? {};
+  const config = spec.config ?? spec;
+
+  const wireBody: any = {
+    name: spec.name || metadata.name,
+    host: spec.host,
+    ...config,
+    tags: metadata.tags,
+    upstreamRouters: config.upstreamRouters ?? [],
+    upstreamNatsServers: config.upstreamNatsServers ?? [],
+  };
+
+  if (config.routerConfig) {
+    wireBody.routerMode = config.routerConfig.routerMode;
+    wireBody.messagingPort = config.routerConfig.messagingPort;
+    if (config.routerConfig.edgeRouterPort !== undefined) {
+      wireBody.edgeRouterPort = config.routerConfig.edgeRouterPort;
+    }
+    if (config.routerConfig.interRouterPort !== undefined) {
+      wireBody.interRouterPort = config.routerConfig.interRouterPort;
+    }
+  }
+
+  if (config.natsConfig) {
+    wireBody.natsMode = config.natsConfig.natsMode;
+    wireBody.natsServerPort = config.natsConfig.natsServerPort;
+    wireBody.natsLeafPort = config.natsConfig.natsLeafPort;
+    wireBody.natsClusterPort = config.natsConfig.natsClusterPort;
+    wireBody.natsMqttPort = config.natsConfig.natsMqttPort;
+    wireBody.natsHttpPort = config.natsConfig.natsHttpPort;
+    if (config.natsConfig.jsStorageSize !== undefined) {
+      wireBody.jsStorageSize = config.natsConfig.jsStorageSize;
+    }
+    if (config.natsConfig.jsMemoryStoreSize !== undefined) {
+      wireBody.jsMemoryStoreSize = config.natsConfig.jsMemoryStoreSize;
+    }
+  }
+
+  if (config.arch !== undefined) {
+    wireBody.archId = toArchIdValue(config.arch);
+  }
+
+  return sanitizeAgentWireBody(wireBody);
+};
+
 export const parseAgentYamlDocument = async (
   doc: any,
 ): Promise<[any, string | null]> => {
@@ -138,89 +203,10 @@ export const parseAgentYamlDocument = async (
     return [null, "Invalid YAML format (missing metadata or spec)"];
   }
 
-  const metadata = doc.metadata ?? {};
-  const spec = doc.spec ?? {};
-  const config = spec.config ?? spec;
-  const routerConfig = config.routerConfig ?? {};
-  const natsConfig = config.natsConfig ?? {};
-
-  const agentData: any = {
-    name: spec.name || metadata.name,
-    host: spec.host,
-    ...config,
-    tags: metadata.tags,
-    routerMode: routerConfig.routerMode,
-    messagingPort: routerConfig.messagingPort,
-    edgeRouterPort: routerConfig.edgeRouterPort,
-    interRouterPort: routerConfig.interRouterPort,
-    natsMode: natsConfig.natsMode,
-    natsServerPort: natsConfig.natsServerPort,
-    natsLeafPort: natsConfig.natsLeafPort,
-    natsClusterPort: natsConfig.natsClusterPort,
-    natsMqttPort: natsConfig.natsMqttPort,
-    natsHttpPort: natsConfig.natsHttpPort,
-    jsStorageSize: natsConfig.jsStorageSize,
-    jsMemoryStoreSize: natsConfig.jsMemoryStoreSize,
-    upstreamRouters: config.upstreamRouters ?? [],
-    upstreamNatsServers: config.upstreamNatsServers ?? [],
-  };
-
-  if (config.arch !== undefined) {
-    agentData.archId = toArchIdValue(config.arch);
-  }
-
-  delete agentData.arch;
-  delete agentData.routerConfig;
-  delete agentData.natsConfig;
-
-  return [agentData, null];
+  return [buildAgentWireBodyFromDoc(doc), null];
 };
 
 export const buildAgentPatchBodyFromYamlContent = (content: string) => {
   const parsed = yaml.load(content) as any;
-  const metadata = parsed?.metadata ?? {};
-  const spec = parsed?.spec ?? {};
-  const config = spec.config ?? spec;
-  const patchBody: any = {
-    ...config,
-    name: spec.name ?? metadata.name,
-    host: spec.host,
-    tags: metadata.tags,
-  };
-
-  if (config.routerConfig) {
-    patchBody.routerMode = config.routerConfig.routerMode;
-    patchBody.messagingPort = config.routerConfig.messagingPort;
-    if (config.routerConfig.edgeRouterPort !== undefined) {
-      patchBody.edgeRouterPort = config.routerConfig.edgeRouterPort;
-    }
-    if (config.routerConfig.interRouterPort !== undefined) {
-      patchBody.interRouterPort = config.routerConfig.interRouterPort;
-    }
-  }
-
-  if (config.natsConfig) {
-    patchBody.natsMode = config.natsConfig.natsMode;
-    patchBody.natsServerPort = config.natsConfig.natsServerPort;
-    patchBody.natsLeafPort = config.natsConfig.natsLeafPort;
-    patchBody.natsClusterPort = config.natsConfig.natsClusterPort;
-    patchBody.natsMqttPort = config.natsConfig.natsMqttPort;
-    patchBody.natsHttpPort = config.natsConfig.natsHttpPort;
-    if (config.natsConfig.jsStorageSize !== undefined) {
-      patchBody.jsStorageSize = config.natsConfig.jsStorageSize;
-    }
-    if (config.natsConfig.jsMemoryStoreSize !== undefined) {
-      patchBody.jsMemoryStoreSize = config.natsConfig.jsMemoryStoreSize;
-    }
-  }
-
-  if (config.arch !== undefined) {
-    patchBody.archId = toArchIdValue(config.arch);
-  }
-
-  delete patchBody.arch;
-  delete patchBody.routerConfig;
-  delete patchBody.natsConfig;
-
-  return patchBody;
+  return buildAgentWireBodyFromDoc(parsed);
 };
