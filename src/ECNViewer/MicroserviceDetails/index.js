@@ -102,7 +102,7 @@ export default function MicroserviceDetails({
       return "--";
     }
     for (const img of microservice.images) {
-      if (img.fogTypeId === agent.fogTypeId) {
+      if (img.archId === agent.archId) {
         return img.containerImage;
       }
     }
