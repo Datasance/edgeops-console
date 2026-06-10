@@ -42,6 +42,7 @@ import {
   buildAgentPatchBodyFromYamlContent,
   dumpAgentYAML,
 } from "../../Utils/agentYAML";
+import { BadgeList } from "../../AccessControl/utils/badgeHelpers";
 
 const formatDuration = (milliseconds: number): string => {
   if (!milliseconds || milliseconds <= 0) return "N/A";
@@ -851,6 +852,42 @@ function NodesList() {
       isSectionHeader: true,
     },
     {
+      label: "Available Runtimes",
+      render: (row: any) => (
+        <BadgeList items={row.availableRuntimes} emptyLabel="N/A" />
+      ),
+    },
+    {
+      label: "Runtime Agent Phase",
+      render: (row: any) =>
+        row.runtimeAgentPhase ? (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900/50 text-blue-200 border border-blue-700/50">
+            {row.runtimeAgentPhase}
+          </span>
+        ) : (
+          "N/A"
+        ),
+    },
+    {
+      label: "Control Plane Quiesced",
+      render: (row: any) =>
+        row.controlPlaneQuiesced === undefined ? (
+          "N/A"
+        ) : (
+          <span
+            className="px-2 py-1 rounded-full text-xs font-semibold"
+            style={{
+              backgroundColor: row.controlPlaneQuiesced ? "#F59E0B" : "#10B981",
+              color: getTextColor(
+                row.controlPlaneQuiesced ? "#F59E0B" : "#10B981",
+              ),
+            }}
+          >
+            {row.controlPlaneQuiesced.toString()}
+          </span>
+        ),
+    },
+    {
       label: "GPS Status",
       render: (node: any) => {
         return node.gpsStatus || "N/A";
@@ -890,10 +927,6 @@ function NodesList() {
       render: (row: any) => (
         <span>{new Date(row.lastStatusTime).toLocaleString()}</span>
       ),
-    },
-    {
-      label: "Processed Messages",
-      render: (row: any) => row.processedMessages || "N/A",
     },
     {
       label: "Applications",
