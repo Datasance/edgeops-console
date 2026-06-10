@@ -84,6 +84,7 @@ function SystemMicroserviceList() {
   const { addTerminalSession, addYamlSession } = useTerminal();
   const { addLogSession } = useLogViewer();
   const auth = useAuth();
+  const isControllerMs = Boolean(selectedMs?.isController);
 
   useEffect(() => {
     if (microserviceId && flattenedMicroservices) {
@@ -558,10 +559,15 @@ function SystemMicroserviceList() {
       header: "Microservice Name",
       render: (row: any) => (
         <div
-          className="cursor-pointer text-blue-400 hover:underline"
+          className="cursor-pointer flex flex-wrap items-center gap-2"
           onClick={() => handleRowClick(row)}
         >
-          {row.name}
+          <span className="text-blue-400 hover:underline">{row.name}</span>
+          {row.isController && (
+            <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-600/30 text-purple-300">
+              Controller
+            </span>
+          )}
         </div>
       ),
     },
@@ -991,6 +997,7 @@ function SystemMicroserviceList() {
             key: "action",
             header: "Action",
             render: (row: any) => {
+              if (node.isController) return null;
               return (
                 <button
                   onClick={() => setSelectedPort(row)}
@@ -1072,6 +1079,7 @@ function SystemMicroserviceList() {
             key: "action",
             header: "Action",
             render: (row: any) => {
+              if (node.isController) return null;
               return (
                 <button
                   onClick={() => setSelectedVolume(row)}
@@ -1224,22 +1232,24 @@ function SystemMicroserviceList() {
               <h2 className="text-sm font-semibold text-gray-300">
                 {node?.id}
               </h2>
-              <div className="flex space-x-2">
-                {dirtyEditors && (
+              {!node.isController && (
+                <div className="flex space-x-2">
+                  {dirtyEditors && (
+                    <button
+                      onClick={handleConfigPatch}
+                      className="hover:text-green-600 hover:bg-white rounded"
+                    >
+                      <EditOutlinedIcon fontSize="small" />
+                    </button>
+                  )}
                   <button
-                    onClick={handleConfigPatch}
+                    onClick={handleConfigDelete}
                     className="hover:text-green-600 hover:bg-white rounded"
                   >
-                    <EditOutlinedIcon fontSize="small" />
+                    <DeleteOutlineIcon fontSize="small" />
                   </button>
-                )}
-                <button
-                  onClick={handleConfigDelete}
-                  className="hover:text-green-600 hover:bg-white rounded"
-                >
-                  <DeleteOutlineIcon fontSize="small" />
-                </button>
-              </div>
+                </div>
+              )}
             </div>
 
             <AceEditor
@@ -1247,16 +1257,22 @@ function SystemMicroserviceList() {
               theme="tomorrow"
               name={`editor-service`}
               value={editorContent}
-              onChange={function editorChanged(value: string) {
-                setDirtyEditors(true);
-                setEditorValues(value);
-                setEditorContent(value);
-              }}
+              onChange={
+                node.isController
+                  ? undefined
+                  : function editorChanged(value: string) {
+                      setDirtyEditors(true);
+                      setEditorValues(value);
+                      setEditorContent(value);
+                    }
+              }
+              readOnly={node.isController}
               showPrintMargin={false}
               setOptions={{
                 useWorker: false,
                 wrap: true,
                 tabSize: 2,
+                readOnly: node.isController,
               }}
               onLoad={(editor) => {
                 editor.renderer.setPadding(10);
@@ -1293,8 +1309,10 @@ function SystemMicroserviceList() {
         data={selectedMs}
         fields={slideOverFields}
         onRestart={() => setShowResetConfirmModal(true)}
-        onDelete={() => setShowDeleteConfirmModal(true)}
-        onEditYaml={handleEditYaml}
+        onDelete={
+          isControllerMs ? undefined : () => setShowDeleteConfirmModal(true)
+        }
+        onEditYaml={isControllerMs ? undefined : handleEditYaml}
         onTerminal={() => enableExecAndOpenTerminal(selectedMs?.uuid!)}
         onLogs={handleOpenLogs}
         customWidth={750}

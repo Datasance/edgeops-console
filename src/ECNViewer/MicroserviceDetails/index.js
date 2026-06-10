@@ -88,6 +88,7 @@ export default function MicroserviceDetails({
     (microservices || []).find((a) => selectedMicroservice.uuid === a.uuid) ||
     selectedMicroservice; // Get live updates from data
   const agent = reducedAgents.byUUID[microservice.iofogUuid];
+  const isControllerMs = Boolean(microservice.isController);
 
   const [editorIsChanged, setEditorIsChanged] = React.useState(false);
   const [
@@ -156,7 +157,7 @@ export default function MicroserviceDetails({
 
   const application = reducedApplications.byName[microservice.application];
 
-  const mainActions = (
+  const mainActions = isControllerMs ? null : (
     <Box sx={sx.actions} style={{ minWidth: 0 }}>
       <Box
         component="span"
@@ -713,12 +714,14 @@ export default function MicroserviceDetails({
                 </Box>
               </Typography>
               <Box sx={sx.addnewButtonArea}>
-                <Button
-                  color="primary"
-                  onClick={() => setOpenAddPortMicroserviceDialog(true)}
-                >
-                  {`Add New`}
-                </Button>
+                {!isControllerMs && (
+                  <Button
+                    color="primary"
+                    onClick={() => setOpenAddPortMicroserviceDialog(true)}
+                  >
+                    {`Add New`}
+                  </Button>
+                )}
               </Box>
             </Box>
           </div>
@@ -783,14 +786,16 @@ export default function MicroserviceDetails({
                         </a>
                       </TableCell>
                       <TableCell>
-                        <icons.DeleteIcon
-                          onClick={() => {
-                            setselectedPortObject(p);
-                            setOpenDeletePortDialog(true);
-                          }}
-                          sx={sx.action}
-                          title="Delete application"
-                        />
+                        {!isControllerMs && (
+                          <icons.DeleteIcon
+                            onClick={() => {
+                              setselectedPortObject(p);
+                              setOpenDeletePortDialog(true);
+                            }}
+                            sx={sx.action}
+                            title="Delete application"
+                          />
+                        )}
                       </TableCell>
                     </TableRow>
                   ))
@@ -815,14 +820,16 @@ export default function MicroserviceDetails({
                   inputClasses={{ root: sx.narrowSearchBar }}
                   classes={{ root: sx.stickyRight }}
                 />
-                <Button
-                  color="primary"
-                  onClick={() =>
-                    setOpenAddVolumeMappingMicroserviceDialog(true)
-                  }
-                >
-                  {`Add New`}
-                </Button>
+                {!isControllerMs && (
+                  <Button
+                    color="primary"
+                    onClick={() =>
+                      setOpenAddVolumeMappingMicroserviceDialog(true)
+                    }
+                  >
+                    {`Add New`}
+                  </Button>
+                )}
               </Box>
             </Typography>
           </div>
@@ -876,14 +883,16 @@ export default function MicroserviceDetails({
                       <TableCell>{p.accessMode}</TableCell>
                       <TableCell>{p.type}</TableCell>
                       <TableCell>
-                        <icons.DeleteIcon
-                          onClick={() => {
-                            setselectedVolumeMappingObject(p);
-                            setOpenDeleteVolumeMappingDialog(true);
-                          }}
-                          sx={sx.action}
-                          title="Delete volume"
-                        />
+                        {!isControllerMs && (
+                          <icons.DeleteIcon
+                            onClick={() => {
+                              setselectedVolumeMappingObject(p);
+                              setOpenDeleteVolumeMappingDialog(true);
+                            }}
+                            sx={sx.action}
+                            title="Delete volume"
+                          />
+                        )}
                       </TableCell>
                     </TableRow>
                   ))
@@ -1014,7 +1023,7 @@ export default function MicroserviceDetails({
           </Typography>
 
           <Box sx={sx.container}>
-            {editorIsChanged ? (
+            {!isControllerMs && editorIsChanged ? (
               <Box sx={sx.copyButton}>
                 <Button
                   onClick={() => {
@@ -1040,7 +1049,11 @@ export default function MicroserviceDetails({
             </Box>
           </Box>
           <AceEditor
-            setOptions={{ useWorker: false, tabSize: 2 }}
+            setOptions={{
+              useWorker: false,
+              tabSize: 2,
+              readOnly: isControllerMs,
+            }}
             mode="yaml"
             theme="tomorrow"
             defaultValue={yamlDump}
@@ -1053,11 +1066,15 @@ export default function MicroserviceDetails({
               height: "700px",
               borderRadius: "4px",
             }}
-            change
-            onChange={function editorChanged(editor) {
-              setEditorIsChanged(true);
-              setEditorDataChanged(editor);
-            }}
+            readOnly={isControllerMs}
+            onChange={
+              isControllerMs
+                ? undefined
+                : function editorChanged(editor) {
+                    setEditorIsChanged(true);
+                    setEditorDataChanged(editor);
+                  }
+            }
           />
         </div>
       </Paper>
