@@ -5,24 +5,52 @@ import {
   invalidControllerApiVersionMessage,
 } from "./constants";
 
-const toFogTypeLabel = (fogTypeId: number | string | undefined) => {
-  if (fogTypeId === 1 || fogTypeId === "1") {
-    return "x86";
-  }
-  if (fogTypeId === 2 || fogTypeId === "2") {
-    return "arm";
-  }
-  return "Auto";
+const ARCH_ID_TO_LABEL: Record<number, string> = {
+  0: "auto",
+  1: "amd64",
+  2: "arm64",
+  3: "riscv64",
+  4: "arm",
 };
 
-const toFogTypeValue = (fogType: string | number | undefined) => {
-  if (fogType === 1 || fogType === "1" || fogType === "x86") {
-    return 1;
+const toArchLabel = (archId: number | string | undefined) => {
+  const id =
+    typeof archId === "string" ? Number.parseInt(archId, 10) : archId;
+  if (id === undefined || Number.isNaN(id)) {
+    return "auto";
   }
-  if (fogType === 2 || fogType === "2" || fogType === "arm") {
-    return 2;
+  return ARCH_ID_TO_LABEL[id] ?? "auto";
+};
+
+const toArchIdValue = (arch: string | number | undefined) => {
+  if (arch === undefined || arch === null || arch === "") {
+    return 0;
   }
-  return 0;
+  if (typeof arch === "number") {
+    return arch >= 0 && arch <= 4 ? arch : 0;
+  }
+  const normalized = String(arch).toLowerCase();
+  switch (normalized) {
+    case "0":
+    case "auto":
+      return 0;
+    case "1":
+    case "amd64":
+    case "x86":
+      return 1;
+    case "2":
+    case "arm64":
+      return 2;
+    case "3":
+    case "riscv64":
+    case "riscv":
+      return 3;
+    case "4":
+    case "arm":
+      return 4;
+    default:
+      return 0;
+  }
 };
 
 export const buildAgentYamlObject = (agent: any) => {
@@ -31,9 +59,9 @@ export const buildAgentYamlObject = (agent: any) => {
     latitude: agent?.latitude,
     longitude: agent?.longitude,
     description: agent?.description,
-    fogType: toFogTypeLabel(agent?.fogTypeId),
+    arch: toArchLabel(agent?.archId),
     networkInterface: agent?.networkInterface,
-    dockerUrl: agent?.dockerUrl,
+    containerEngineUrl: agent?.containerEngineUrl,
     containerEngine: agent?.containerEngine,
     deploymentType: agent?.deploymentType,
     diskLimit: agent?.diskLimit,
@@ -72,7 +100,7 @@ export const buildAgentYamlObject = (agent: any) => {
       jsMemoryStoreSize: agent?.jsMemoryStoreSize,
     },
     logLevel: agent?.logLevel,
-    dockerPruningFrequency: agent?.dockerPruningFrequency,
+    pruningFrequency: agent?.pruningFrequency,
     availableDiskThreshold: agent?.availableDiskThreshold,
     timeZone: agent?.timeZone,
   };
@@ -137,12 +165,11 @@ export const parseAgentYamlDocument = async (
     upstreamNatsServers: config.upstreamNatsServers ?? [],
   };
 
-  if (config.agentType !== undefined) {
-    agentData.fogType = config.agentType;
-  } else if (config.fogType !== undefined) {
-    agentData.fogType = toFogTypeValue(config.fogType);
+  if (config.arch !== undefined) {
+    agentData.archId = toArchIdValue(config.arch);
   }
 
+  delete agentData.arch;
   delete agentData.routerConfig;
   delete agentData.natsConfig;
 
@@ -187,7 +214,11 @@ export const buildAgentPatchBodyFromYamlContent = (content: string) => {
     }
   }
 
-  patchBody.fogType = toFogTypeValue(config.fogType);
+  if (config.arch !== undefined) {
+    patchBody.archId = toArchIdValue(config.arch);
+  }
+
+  delete patchBody.arch;
   delete patchBody.routerConfig;
   delete patchBody.natsConfig;
 
