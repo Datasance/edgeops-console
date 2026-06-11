@@ -20,12 +20,24 @@ declare module "*.gif" {
   export default value;
 }
 
+type ControllerAuthMode = "embedded" | "external";
+
+interface ControllerAuthConfig {
+  mode: ControllerAuthMode;
+  loginUrl: string;
+  refreshUrl: string;
+  logoutUrl: string;
+  profileUrl: string;
+  changePasswordUrl: string;
+  oauthAuthorizeUrl: string;
+  oauthInteractionUrl: string;
+}
+
 interface ControllerConfig {
-  port?: number;
-  oidcIssuerUrl?: string;
-  oidcClientId?: string;
-  oidcAdminConsoleUrl?: string;
-  url?: string;
+  apiPort?: number;
+  publicUrl: string;
+  viewerUrl?: string;
+  auth: ControllerAuthConfig;
   controlPlane?: string;
 }
 
