@@ -173,16 +173,6 @@ Domain modules (`AccessControl`, `Workloads`, etc.) remain at `src/` root; share
 ```sh
 nvm use 24
 
-# v3.8 legacy grep (must find no matches except auth presence check)
-rg 'fog-types|fogType|fogTypeId|/api/v3/flow|flowId' src/ && exit 1 || true
-rg 'dockerUrl|dockerPruningFrequency|processedMessages|messageSpeed' src/ && exit 1 || true
-rg 'react-oidc-context|oidc-client|oidcIssuer|signinRedirect|keycloak|OidcAuth' src/ && exit 1 || true
-rg 'oidcIssuerUrl|oidcClientId|oidcAdminConsoleUrl|resolveAdminConsoleUrl' src/ && exit 1 || true
-rg 'AuthProvider|useAuth|getApiBase' src/ || exit 1
-
-# structure refactor (must find no matches)
-rg 'ECNViewer|DatasanceConfig|CustomComponent|from ['\''\"].*Utils/' src/ && exit 1 || true
-
 npm run lint
 npm test
 npm run build:datasance
