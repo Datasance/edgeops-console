@@ -4,6 +4,7 @@ import { FitAddon } from "xterm-addon-fit";
 import "xterm/css/xterm.css";
 import * as msgpack from "@msgpack/msgpack";
 import { useDebuggerStatus } from "../hooks/useDebuggerStatus";
+import { getWsBaseUrl } from "../auth/api";
 
 type ExecSessionTerminalProps = {
   socketUrl: string;
@@ -181,14 +182,7 @@ const ExecSessionTerminal: React.FC<ExecSessionTerminalProps> = ({
   // Update socket URL and microservice UUID when debugger is ready
   useEffect(() => {
     if (waitingForDebugger && debugUuid && debuggerStatus === "running") {
-      const newSocketUrl = (() => {
-        if (!window.controllerConfig?.url) {
-          return `ws://${window.location.hostname}:${window?.controllerConfig?.port}/api/v3/microservices/system/exec/${debugUuid}`;
-        }
-        const u = new URL(window.controllerConfig.url);
-        const protocol = u.protocol === "https:" ? "wss:" : "ws:";
-        return `${protocol}//${u.host}/api/v3/microservices/system/exec/${debugUuid}`;
-      })();
+      const newSocketUrl = `${getWsBaseUrl()}/api/v3/microservices/system/exec/${debugUuid}`;
 
       setActualSocketUrl(newSocketUrl);
       setActualMicroserviceUuid(debugUuid);

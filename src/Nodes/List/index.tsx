@@ -29,7 +29,8 @@ import LogConfigModal, {
 import ExecConfigModal, {
   ExecConfig,
 } from "../../CustomComponent/ExecConfigModal";
-import { useAuth } from "react-oidc-context";
+import { useAuth } from "../../auth";
+import { getApiV3BaseUrl, getWsBaseUrl } from "../../auth/api";
 import {
   Copy as FileCopyIcon,
   Check as CheckIcon,
@@ -251,26 +252,20 @@ function NodesList() {
     }
   };
 
-  const getApiEndpointUrl = (): string => {
-    if (window.controllerConfig?.url) {
-      const u = new URL(window.controllerConfig.url);
-      return `${u.protocol}//${u.host}/api/v3`;
-    }
-    return `http://${window.location.hostname}:${window?.controllerConfig?.port || 51121}/api/v3`;
-  };
+  const getApiEndpointUrl = (): string => getApiV3BaseUrl();
 
   const generateProvisionCommands = (): string[] => {
     const apiUrl = getApiEndpointUrl();
     const commands: string[] = [];
 
-    commands.push(`iofog-agent config -a ${apiUrl}`);
+    commands.push(`edgelet config --a ${apiUrl}`);
 
     if (provisionKeyData?.caCert) {
-      commands.push(`iofog-agent cert ${provisionKeyData.caCert}`);
+      commands.push(`edgelet config cert ${provisionKeyData.caCert}`);
     }
 
     if (provisionKeyData?.key) {
-      commands.push(`iofog-agent provision ${provisionKeyData.key}`);
+      commands.push(`edgelet provision ${provisionKeyData.key}`);
     }
 
     return commands;
@@ -338,14 +333,7 @@ function NodesList() {
         });
 
         // Create a placeholder socket URL (will be updated when debugger is ready)
-        const socketUrl = (() => {
-          if (!window.controllerConfig?.url) {
-            return `ws://${window.location.hostname}:${window?.controllerConfig?.port}/api/v3/microservices/system/exec/placeholder`;
-          }
-          const u = new URL(window.controllerConfig.url);
-          const protocol = u.protocol === "https:" ? "wss:" : "ws:";
-          return `${protocol}//${u.host}/api/v3/microservices/system/exec/placeholder`;
-        })();
+        const socketUrl = `${getWsBaseUrl()}/api/v3/microservices/system/exec/placeholder`;
 
         // Add terminal session to global state with waitingForDebugger flag
         addTerminalSession({
@@ -401,14 +389,7 @@ function NodesList() {
 
     try {
       // Create websocket URL with tail config
-      const baseUrl = (() => {
-        if (!window.controllerConfig?.url) {
-          return `ws://${window.location.hostname}:${window?.controllerConfig?.port}/api/v3/iofog/${selectedNode.uuid}/logs`;
-        }
-        const u = new URL(window.controllerConfig.url);
-        const protocol = u.protocol === "https:" ? "wss:" : "ws:";
-        return `${protocol}//${u.host}/api/v3/iofog/${selectedNode.uuid}/logs`;
-      })();
+      const baseUrl = `${getWsBaseUrl()}/api/v3/iofog/${selectedNode.uuid}/logs`;
 
       const params = new URLSearchParams();
       params.append("tail", config.tail.toString());

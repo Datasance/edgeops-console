@@ -32,7 +32,8 @@ import { useLogViewer } from "../../providers/LogViewer/LogViewerProvider";
 import LogConfigModal, {
   LogTailConfig,
 } from "../../CustomComponent/LogConfigModal";
-import { useAuth } from "react-oidc-context";
+import { useAuth } from "../../auth";
+import { getWsBaseUrl } from "../../auth/api";
 import { useUnifiedYamlUpload } from "../../hooks/useUnifiedYamlUpload";
 
 function MicroservicesList() {
@@ -459,14 +460,7 @@ function MicroservicesList() {
       }
 
       // Create socket URL
-      const socketUrl = (() => {
-        if (!window.controllerConfig?.url) {
-          return `ws://${window.location.hostname}:${window?.controllerConfig?.port}/api/v3/microservices/exec/${microserviceUuid}`;
-        }
-        const u = new URL(window.controllerConfig.url);
-        const protocol = u.protocol === "https:" ? "wss:" : "ws:";
-        return `${protocol}//${u.host}/api/v3/microservices/exec/${microserviceUuid}`;
-      })();
+      const socketUrl = `${getWsBaseUrl()}/api/v3/microservices/exec/${microserviceUuid}`;
 
       // Add terminal session to global state
       addTerminalSession({
@@ -494,14 +488,7 @@ function MicroservicesList() {
 
     try {
       // Create websocket URL with tail config
-      const baseUrl = (() => {
-        if (!window.controllerConfig?.url) {
-          return `ws://${window.location.hostname}:${window?.controllerConfig?.port}/api/v3/microservices/${selectedMs.uuid}/logs`;
-        }
-        const u = new URL(window.controllerConfig.url);
-        const protocol = u.protocol === "https:" ? "wss:" : "ws:";
-        return `${protocol}//${u.host}/api/v3/microservices/${selectedMs.uuid}/logs`;
-      })();
+      const baseUrl = `${getWsBaseUrl()}/api/v3/microservices/${selectedMs.uuid}/logs`;
 
       const params = new URLSearchParams();
       params.append("tail", config.tail.toString());
@@ -780,12 +767,20 @@ function MicroservicesList() {
       isSectionHeader: true,
     },
     {
-      label: "X86 Image",
+      label: "AMD64 Image",
       render: (row: any) => row.images?.[0]?.containerImage || "N/A",
     },
     {
-      label: "ARM Image",
+      label: "ARM64 Image",
       render: (row: any) => row.images?.[1]?.containerImage || "N/A",
+    },
+    {
+      label: "RISCV64 Image",
+      render: (row: any) => row.images?.[2]?.containerImage || "N/A",
+    },
+    {
+      label: "ARM Image",
+      render: (row: any) => row.images?.[3]?.containerImage || "N/A",
     },
     {
       label: "Registry",
