@@ -20,11 +20,16 @@ import {
   SlidersHorizontal as TuneIcon,
   ShieldCheck as AccessControlIcon,
   Waypoints as MessageBusIcon,
+  UserCircle as UserCircleIcon,
+  Users as UsersIcon,
 } from "lucide-react";
 
 import { useData } from "../providers/Data";
 import { useController } from "../ControllerProvider";
-import { useAuth } from "react-oidc-context";
+import { getAuthMode, useAuth } from "../auth";
+import { getApiV3BaseUrl } from "../auth/api";
+import ForcePasswordChangePage from "../auth/ForcePasswordChangePage";
+import PostLoginGate from "../auth/PostLoginGate";
 import { useTerminal } from "../providers/Terminal/TerminalProvider";
 
 import Dashboard from "../Dashboard";
@@ -33,6 +38,8 @@ import logomark from "../assets/potLogoWithWhiteText.svg";
 
 import { Sidebar, Menu, MenuItem, SubMenu } from "react-pro-sidebar";
 import { ProSidebarProvider } from "react-pro-sidebar";
+import SidebarNavItem from "./SidebarNavItem";
+import IamExternalBanner from "./IamExternalBanner";
 import NodesList from "../Nodes/List";
 import MicroservicesList from "../Workloads/Microservices";
 import SystemMicroservicesList from "../Workloads/SystemMicroservices";
@@ -58,16 +65,9 @@ import NatsUserRules from "../AccessControl/natsUserRules";
 import Operators from "../MessageBus/Operators";
 import Accounts from "../MessageBus/Accounts";
 import Users from "../MessageBus/Users";
-
-const controllerJson = window.controllerConfig || null;
-
-function resolveAdminConsoleUrl(config: ControllerConfig | null): string | null {
-  if (!config) return null;
-  if (config.oidcAdminConsoleUrl?.trim()) return config.oidcAdminConsoleUrl.trim();
-  const issuer = config.oidcIssuerUrl?.replace(/\/+$/, "");
-  if (issuer && /\/realms\/[^/]+/.test(issuer)) return `${issuer}/console`;
-  return null;
-}
+import IdentityUsersList from "../Identity/Users";
+import IdentityGroupsList from "../Identity/Groups";
+import IdentityAccountPage from "../Identity/Account";
 
 function RouteWatcher() {
   const { refreshData } = useData();
@@ -88,9 +88,10 @@ function RouteWatcher() {
 
 export default function Layout() {
   const auth = useAuth();
-  const adminConsoleUrl = resolveAdminConsoleUrl(controllerJson);
   const returnHomeCbRef = React.useRef<(() => void) | null>(null);
-  const { status, updateController, request } = useController();
+  const { status, request } = useController();
+  const authMode = getAuthMode();
+  const isEmbeddedAuth = authMode === "embedded";
   const { isDrawerOpen } = useTerminal();
   const [collapsed, setCollapsed] = React.useState(true);
   const [isPinned, setIsPinned] = React.useState(false);
@@ -105,12 +106,7 @@ export default function Layout() {
 
   const handleLogout = async () => {
     try {
-      if (auth?.signoutRedirect) {
-        await auth.signoutRedirect();
-      } else {
-        updateController({ user: null });
-        window.location.href = "/dashboard";
-      }
+      await auth.signoutRedirect();
     } catch (error) {
       console.error("Error during logout:", error);
     }
@@ -236,103 +232,65 @@ export default function Layout() {
                       }),
                     }}
                   >
-                    <NavLink to="/dashboard">
-                      {({ isActive }) => (
-                        <MenuItem icon={<DashboardIcon />} active={isActive}>
-                          Overview
-                        </MenuItem>
-                      )}
-                    </NavLink>
+                    <SidebarNavItem
+                      to="/dashboard"
+                      icon={<DashboardIcon />}
+                      end
+                    >
+                      Overview
+                    </SidebarNavItem>
 
                     <SubMenu label="Nodes" icon={<StorageRounded size={18} />}>
-                      <NavLink to="/nodes/list">
-                        {({ isActive }) => (
-                          <MenuItem active={isActive}>List</MenuItem>
-                        )}
-                      </NavLink>
-                      <NavLink to="/nodes/Map">
-                        {({ isActive }) => (
-                          <MenuItem active={isActive}>Map</MenuItem>
-                        )}
-                      </NavLink>
+                      <SidebarNavItem to="/nodes/list">List</SidebarNavItem>
+                      <SidebarNavItem to="/nodes/Map">Map</SidebarNavItem>
                     </SubMenu>
 
                     <SubMenu label="Workloads" icon={<LayersRounded />}>
-                      <NavLink to="/Workloads/MicroservicesList">
-                        {({ isActive }) => (
-                          <MenuItem active={isActive}>Microservices</MenuItem>
-                        )}
-                      </NavLink>
-                      <NavLink to="/Workloads/SystemMicroservicesList">
-                        {({ isActive }) => (
-                          <MenuItem active={isActive}>
-                            System Microservices
-                          </MenuItem>
-                        )}
-                      </NavLink>
-                      <NavLink to="/Workloads/ApplicationList">
-                        {({ isActive }) => (
-                          <MenuItem active={isActive}>Application</MenuItem>
-                        )}
-                      </NavLink>
-                      <NavLink to="/Workloads/SystemApplicationList">
-                        {({ isActive }) => (
-                          <MenuItem active={isActive}>
-                            System Application
-                          </MenuItem>
-                        )}
-                      </NavLink>
+                      <SidebarNavItem to="/Workloads/MicroservicesList">
+                        Microservices
+                      </SidebarNavItem>
+                      <SidebarNavItem to="/Workloads/SystemMicroservicesList">
+                        System Microservices
+                      </SidebarNavItem>
+                      <SidebarNavItem to="/Workloads/ApplicationList">
+                        Application
+                      </SidebarNavItem>
+                      <SidebarNavItem to="/Workloads/SystemApplicationList">
+                        System Application
+                      </SidebarNavItem>
                     </SubMenu>
 
                     <SubMenu
                       label="Config"
                       icon={<MiscellaneousServicesIcon size={18} />}
                     >
-                      <NavLink to="/config/AppTemplates">
-                        {({ isActive }) => (
-                          <MenuItem active={isActive}>App Templates</MenuItem>
-                        )}
-                      </NavLink>
-                      <NavLink to="/config/CatalogMicroservices">
-                        {({ isActive }) => (
-                          <MenuItem active={isActive}>
-                            Catalog Microservices
-                          </MenuItem>
-                        )}
-                      </NavLink>
-                      <NavLink to="/config/Registries">
-                        {({ isActive }) => (
-                          <MenuItem active={isActive}>Registries</MenuItem>
-                        )}
-                      </NavLink>
-                      <NavLink to="/config/ConfigMaps">
-                        {({ isActive }) => (
-                          <MenuItem active={isActive}>Config Maps</MenuItem>
-                        )}
-                      </NavLink>
-                      <NavLink to="/config/secret">
-                        {({ isActive }) => (
-                          <MenuItem active={isActive}>Secrets</MenuItem>
-                        )}
-                      </NavLink>
-                      <NavLink to="/config/VolumeMounts">
-                        {({ isActive }) => (
-                          <MenuItem active={isActive}>Volume Mounts</MenuItem>
-                        )}
-                      </NavLink>
-                      <NavLink to="/config/certificates">
-                        {({ isActive }) => (
-                          <MenuItem active={isActive}>Certificates</MenuItem>
-                        )}
-                      </NavLink>
+                      <SidebarNavItem to="/config/AppTemplates">
+                        App Templates
+                      </SidebarNavItem>
+                      <SidebarNavItem to="/config/CatalogMicroservices">
+                        Catalog Microservices
+                      </SidebarNavItem>
+                      <SidebarNavItem to="/config/Registries">
+                        Registries
+                      </SidebarNavItem>
+                      <SidebarNavItem to="/config/ConfigMaps">
+                        Config Maps
+                      </SidebarNavItem>
+                      <SidebarNavItem to="/config/secret">
+                        Secrets
+                      </SidebarNavItem>
+                      <SidebarNavItem to="/config/VolumeMounts">
+                        Volume Mounts
+                      </SidebarNavItem>
+                      <SidebarNavItem to="/config/certificates">
+                        Certificates
+                      </SidebarNavItem>
                     </SubMenu>
 
                     <SubMenu label="Network" icon={<Hub />}>
-                      <NavLink to="/config/services">
-                        {({ isActive }) => (
-                          <MenuItem active={isActive}>Services</MenuItem>
-                        )}
-                      </NavLink>
+                      <SidebarNavItem to="/config/services">
+                        Services
+                      </SidebarNavItem>
                     </SubMenu>
 
                     {isNatsEnabled && (
@@ -340,21 +298,15 @@ export default function Layout() {
                         label="MessageBus"
                         icon={<MessageBusIcon size={18} />}
                       >
-                        <NavLink to="/messagebus/operators">
-                          {({ isActive }) => (
-                            <MenuItem active={isActive}>Operators</MenuItem>
-                          )}
-                        </NavLink>
-                        <NavLink to="/messagebus/accounts">
-                          {({ isActive }) => (
-                            <MenuItem active={isActive}>Accounts</MenuItem>
-                          )}
-                        </NavLink>
-                        <NavLink to="/messagebus/users">
-                          {({ isActive }) => (
-                            <MenuItem active={isActive}>Users</MenuItem>
-                          )}
-                        </NavLink>
+                        <SidebarNavItem to="/messagebus/operators">
+                          Operators
+                        </SidebarNavItem>
+                        <SidebarNavItem to="/messagebus/accounts">
+                          Accounts
+                        </SidebarNavItem>
+                        <SidebarNavItem to="/messagebus/users">
+                          Users
+                        </SidebarNavItem>
                       </SubMenu>
                     )}
 
@@ -362,64 +314,52 @@ export default function Layout() {
                       label="Access Control"
                       icon={<AccessControlIcon size={18} />}
                     >
-                      <NavLink to="/access-control/roles">
-                        {({ isActive }) => (
-                          <MenuItem active={isActive}>Roles</MenuItem>
-                        )}
-                      </NavLink>
-                      <NavLink to="/access-control/rolebindings">
-                        {({ isActive }) => (
-                          <MenuItem active={isActive}>Role Bindings</MenuItem>
-                        )}
-                      </NavLink>
-                      <NavLink to="/access-control/serviceaccounts">
-                        {({ isActive }) => (
-                          <MenuItem active={isActive}>
-                            Service Accounts
-                          </MenuItem>
-                        )}
-                      </NavLink>
-                      <NavLink to="/access-control/nats-account-rules">
-                        {({ isActive }) => (
-                          <MenuItem active={isActive}>
-                            NATs Account Rules
-                          </MenuItem>
-                        )}
-                      </NavLink>
-                      <NavLink to="/access-control/nats-user-rules">
-                        {({ isActive }) => (
-                          <MenuItem active={isActive}>NATs User Rules</MenuItem>
-                        )}
-                      </NavLink>
-                      {adminConsoleUrl && (
-                        <MenuItem
-                          onClick={() =>
-                            window.open(adminConsoleUrl, "_blank")
-                          }
-                        >
-                          IAM
-                        </MenuItem>
-                      )}
+                      <SidebarNavItem to="/access-control/roles">
+                        Roles
+                      </SidebarNavItem>
+                      <SidebarNavItem to="/access-control/rolebindings">
+                        Role Bindings
+                      </SidebarNavItem>
+                      <SidebarNavItem to="/access-control/serviceaccounts">
+                        Service Accounts
+                      </SidebarNavItem>
+                      <SidebarNavItem to="/access-control/nats-account-rules">
+                        NATs Account Rules
+                      </SidebarNavItem>
+                      <SidebarNavItem to="/access-control/nats-user-rules">
+                        NATs User Rules
+                      </SidebarNavItem>
                     </SubMenu>
 
-                    <NavLink to="/events">
-                      {({ isActive }) => (
-                        <MenuItem icon={<EventIcon />} active={isActive}>
-                          Events
-                        </MenuItem>
-                      )}
-                    </NavLink>
+                    {isEmbeddedAuth ? (
+                      <SubMenu label="IAM" icon={<UsersIcon size={18} />}>
+                        <SidebarNavItem to="/account">My Account</SidebarNavItem>
+                        <SidebarNavItem to="/access-control/users">
+                          Users
+                        </SidebarNavItem>
+                        <SidebarNavItem to="/access-control/groups">
+                          Groups
+                        </SidebarNavItem>
+                      </SubMenu>
+                    ) : (
+                      <SidebarNavItem
+                        to="/account"
+                        icon={<UserCircleIcon size={18} />}
+                      >
+                        My Account
+                      </SidebarNavItem>
+                    )}
 
-                    <NavLink to="/config/pollingSettings">
-                      {({ isActive }) => (
-                        <MenuItem
-                          icon={<TuneIcon size={18} />}
-                          active={isActive}
-                        >
-                          Viewer Config
-                        </MenuItem>
-                      )}
-                    </NavLink>
+                    <SidebarNavItem to="/events" icon={<EventIcon />}>
+                      Events
+                    </SidebarNavItem>
+
+                    <SidebarNavItem
+                      to="/config/pollingSettings"
+                      icon={<TuneIcon size={18} />}
+                    >
+                      Viewer Config
+                    </SidebarNavItem>
 
                     <MenuItem
                       icon={<ExitToAppIcon size={18} />}
@@ -474,11 +414,7 @@ export default function Layout() {
                         </span>
                         <a
                           className="underline underline-offset-2"
-                          href={`/#/api?authToken=${auth?.user?.access_token}&baseUrl=${
-                            window.controllerConfig?.url === undefined
-                              ? `${window.location.protocol}//${window.location.hostname}:${window?.controllerConfig?.port}/api/v3`
-                              : `${window.location.origin}/api/v3`
-                          }`}
+                          href={`/#/api?authToken=${auth?.user?.access_token}&baseUrl=${encodeURIComponent(getApiV3BaseUrl())}`}
                           target="_parent"
                         >
                           API
@@ -526,11 +462,18 @@ export default function Layout() {
                 : "100vh",
             }}
           >
-            <Routes>
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/dashboard" Component={Dashboard} />
+            <IamExternalBanner />
+            <PostLoginGate>
+              <Routes>
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/dashboard" Component={Dashboard} />
+                <Route
+                  path="/account/force-password-change"
+                  Component={ForcePasswordChangePage}
+                />
+                <Route path="/account" Component={IdentityAccountPage} />
 
-              <Route path="/api" Component={SwaggerDoc} />
+                <Route path="/api" Component={SwaggerDoc} />
               <Route path="/nodes/list" Component={NodesList} />
               <Route
                 path="/Workloads/MicroservicesList"
@@ -585,11 +528,20 @@ export default function Layout() {
                 path="/access-control/nats-user-rules"
                 Component={NatsUserRules}
               />
+              <Route
+                path="/access-control/users"
+                Component={IdentityUsersList}
+              />
+              <Route
+                path="/access-control/groups"
+                Component={IdentityGroupsList}
+              />
               <Route path="/messagebus/operators" Component={Operators} />
               <Route path="/messagebus/accounts" Component={Accounts} />
               <Route path="/messagebus/users" Component={Users} />
               <Route Component={() => <Navigate to="/dashboard" />} />
-            </Routes>
+              </Routes>
+            </PostLoginGate>
           </div>
         </div>
         <GlobalTerminalDrawer
