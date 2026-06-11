@@ -11,6 +11,7 @@ import {
   preloadResourceCache,
   ResourceExistenceCache,
 } from "../Utils/resourceExistenceChecker";
+import { sanitizeRolePayload } from "../Utils/parseRoleYaml";
 
 export interface UploadResult {
   success: boolean;
@@ -168,13 +169,9 @@ export function useUnifiedYamlUpload({
       }
 
       // Handle RBAC resources - use JSON endpoints (not YAML multipart endpoints)
-      // The YAML multipart endpoints are for direct file uploads, not parsed YAML
-      if (
-        kind === "Role" ||
-        kind === "RoleBinding" ||
-        kind === "ServiceAccount"
-      ) {
-        // Use standard JSON endpoints - body is already correctly formatted by parser
+      if (kind === "Role") {
+        finalBody = sanitizeRolePayload(parsed);
+      } else if (kind === "RoleBinding" || kind === "ServiceAccount") {
         finalBody = parsed;
       }
 

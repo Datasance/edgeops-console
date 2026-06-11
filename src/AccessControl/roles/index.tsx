@@ -11,7 +11,12 @@ import yaml from "js-yaml";
 import CustomLoadingModal from "../../CustomComponent/CustomLoadingModal";
 import UnsavedChangesModal from "../../CustomComponent/UnsavedChangesModal";
 import { useTerminal } from "../../providers/Terminal/TerminalProvider";
-import { parseRole } from "../../Utils/parseRoleYaml";
+import {
+  normalizeRoleFromApi,
+  parseRole,
+  sanitizeRolePayload,
+  sanitizeRoleRules,
+} from "../../Utils/parseRoleYaml";
 import { useUnifiedYamlUpload } from "../../hooks/useUnifiedYamlUpload";
 import { BadgeList, VerbList, ResourceList } from "../utils/badgeHelpers";
 import { CANONICAL_DISPLAY_CONTROLLER_API_VERSION } from "../../Utils/constants";
@@ -59,7 +64,9 @@ function Roles() {
         return;
       }
       const rolesData = (await rolesResponse.json()).roles;
-      setRoles(rolesData || []);
+      setRoles(
+        (rolesData || []).map((role: unknown) => normalizeRoleFromApi(role)),
+      );
       setFetching(false);
     } catch (e: any) {
       pushFeedback({ message: e.message, type: "error" });
@@ -79,7 +86,7 @@ function Roles() {
       const responseItem = await itemResponse.json();
       // Handle nested response structure
       const role = responseItem.role || responseItem;
-      setSelectedRole(role);
+      setSelectedRole(normalizeRoleFromApi(role));
       setIsOpen(true);
       setFetching(false);
     } catch (e: any) {
@@ -95,7 +102,7 @@ function Roles() {
       if (itemResponse.ok) {
         const responseItem = await itemResponse.json();
         const role = responseItem.role || responseItem;
-        setSelectedRole(role);
+        setSelectedRole(normalizeRoleFromApi(role));
       }
     } catch (e) {
       console.error("Error refreshing role data:", e);
@@ -133,7 +140,7 @@ function Roles() {
       metadata: {
         name: role?.name,
       },
-      rules: role?.rules || [],
+      rules: sanitizeRoleRules(role?.rules || []),
     };
     const yamlString = yaml.dump(yamlObj, { noRefs: true, indent: 2 });
 
@@ -170,7 +177,7 @@ function Roles() {
           headers: {
             "content-type": "application/json",
           },
-          body: JSON.stringify(role),
+          body: JSON.stringify(sanitizeRolePayload(role)),
         },
       );
 

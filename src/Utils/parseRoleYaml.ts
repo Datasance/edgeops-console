@@ -1,5 +1,67 @@
 import lget from "lodash/get";
 
+export function sanitizeRoleRules(rules: unknown[]): Record<string, unknown>[] {
+  if (!Array.isArray(rules)) {
+    return [];
+  }
+  return rules.map((rule) => {
+    if (!rule || typeof rule !== "object") {
+      return {};
+    }
+    const out: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(rule)) {
+      if (value !== null && value !== undefined) {
+        out[key] = value;
+      }
+    }
+    return out;
+  });
+}
+
+export function sanitizeRolePayload(role: {
+  name: string;
+  kind?: string;
+  rules?: unknown[];
+}): { name: string; kind?: string; rules: Record<string, unknown>[] } {
+  return {
+    name: role.name,
+    kind: role.kind,
+    rules: sanitizeRoleRules(role.rules ?? []),
+  };
+}
+
+/** Strip null rule fields from Controller JSON (flat or nested { role }). */
+export function normalizeRoleFromApi(raw: unknown): unknown {
+  if (!raw || typeof raw !== "object") {
+    return raw;
+  }
+  const record = raw as Record<string, unknown>;
+
+  if (record.role && typeof record.role === "object") {
+    const inner = record.role as Record<string, unknown>;
+    return {
+      ...record,
+      role: {
+        ...inner,
+        rules: sanitizeRoleRules(
+          Array.isArray(inner.rules) ? inner.rules : [],
+        ),
+      },
+    };
+  }
+
+  if (typeof record.name === "string") {
+    return {
+      ...record,
+      rules: sanitizeRoleRules(
+        Array.isArray(record.rules) ? record.rules : [],
+      ),
+    };
+  }
+
+  return raw;
+}
+
 export const parseRole = async (doc: any): Promise<[any, string | null]> => {
   if (!doc) {
     return [null, "Invalid YAML: Document is empty or null"];
@@ -57,11 +119,11 @@ export const parseRole = async (doc: any): Promise<[any, string | null]> => {
     return [null, "Rules must be an array"];
   }
 
-  const apiObject = {
+  const apiObject = sanitizeRolePayload({
     name: name,
     kind: kind,
     rules: rules,
-  };
+  });
 
   return [apiObject, null];
 };
