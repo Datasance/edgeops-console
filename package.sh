@@ -1,47 +1,48 @@
 #!/usr/bin/env sh
 #
-# Package.sh is a simple script that creates a distribution tarball from the files and folders in this repo that
-# we want to ship to customers. These files are defined in 'distro-list.txt'.
+# package.sh — build EdgeOps Console and tarball build/ for Controller embed.
 #
 
-# Import our helper functions
+set -e
+
 . scripts/utils.sh
 
-VERSION="v1.4.4"
+VERSION="$(node -p "require('./package.json').version")"
+DISTRIBUTION="${VITE_DISTRIBUTION:-$(sh scripts/resolve-distribution.sh | tr -d '[:space:]')}"
+DISTRO_NAME="edgeops-console_${DISTRIBUTION}_${VERSION}.tar.gz"
 
-prettyTitle "Datasance ioFog ECN Viewer Packaging"
-echoInfo "Beginning packaging process"
+prettyTitle "EdgeOps Console packaging (${DISTRIBUTION})"
+echoInfo "Beginning build-only packaging"
 
-# echoInfo "Building application bundle"
-# npm run build
-
-# This is what we want to call our distro
-DISTRO_NAME="datasance-iofog-ecn-viewer_${VERSION}.tar.gz"
-# Clean away any previous distro
-if [ -f ${DISTRO_NAME} ]; then
-    echoInfo "Removing old Distro file"
-    rm ${DISTRO_NAME}
+if [ -f "${DISTRO_NAME}" ]; then
+    echoInfo "Removing old artifact"
+    rm "${DISTRO_NAME}"
 fi
-npm install --force
-echoInfo "Building production app"
-npm run build 
-cp -r build package/
-cd package && npm version "${VERSION}" --allow-same-version && cd -
 
-echoInfo "Creating ECN Viewer tarball with name '${DISTRO_NAME}''"
+echoInfo "Installing dependencies"
+if [ -n "${CI}" ]; then
+    npm ci --legacy-peer-deps
+else
+    npm install --legacy-peer-deps
+fi
 
-cp LICENSE package/LICENSE.md
+echoInfo "Building production app (VITE_DISTRIBUTION=${DISTRIBUTION})"
+case "${DISTRIBUTION}" in
+    datasance|iofog)
+        npm run "build:${DISTRIBUTION}"
+        ;;
+    *)
+        echoError "Unknown VITE_DISTRIBUTION: ${DISTRIBUTION} (expected datasance or iofog)"
+        exit 1
+        ;;
+esac
 
-# Build our archive
-tar -czvf ${DISTRO_NAME} \
-    --exclude='^#' \
-    --exclude="./server/node_modules" \
-    --exclude="./node_modules" \
-    --exclude="./.github" \
-    -T distro-list.txt
+if [ ! -d build ]; then
+    echoError "build/ directory missing after vite build"
+    exit 1
+fi
 
+echoInfo "Creating tarball '${DISTRO_NAME}'"
+tar -czvf "${DISTRO_NAME}" build/
 
-npm publish ${DISTRO_NAME} --access public
-
-
-echoInfo "Distro packaging complete!"
+echoInfo "Packaging complete: ${DISTRO_NAME}"
