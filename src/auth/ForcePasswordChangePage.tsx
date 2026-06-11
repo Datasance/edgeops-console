@@ -13,11 +13,11 @@ import {
   type TextFieldProps,
 } from "@mui/material";
 import { Eye, EyeOff } from "lucide-react";
-import logomark from "../assets/potLogoWithWhiteText.svg";
+import { LOGO_ALT_TEXT, loginLogomark } from "../config/distribution";
 import { postChangePassword } from "./api";
 import { useAuth } from "./AuthContext";
 import { navigateToHashRoute } from "./postLoginRedirect";
-import { generatePassword } from "../Utils/generatePassword";
+import { generatePassword } from "@/lib/generatePassword";
 
 type PasswordFieldProps = Omit<TextFieldProps, "type" | "InputProps"> & {
   showPassword: boolean;
@@ -133,7 +133,7 @@ const ForcePasswordChangePage: FC = () => {
               py: 2,
             }}
           >
-            <img src={logomark} alt="ECN Viewer" style={{ height: 40 }} />
+            <img src={loginLogomark} alt={LOGO_ALT_TEXT} style={{ height: 40 }} />
           </Box>
 
           <Typography variant="h6" component="h1" gutterBottom>

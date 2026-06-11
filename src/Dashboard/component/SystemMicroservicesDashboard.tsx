@@ -1,7 +1,7 @@
 import React from "react";
 import { ServerCog } from "lucide-react";
 import ApexCharts from "react-apexcharts";
-import { StatusColor, StatusType } from "../../Utils/Enums/StatusColor";
+import { StatusColor, StatusType } from "@/lib/constants/Enums/StatusColor";
 
 interface SystemMicroservicesDashboardProps {
   systemApplications: any[];

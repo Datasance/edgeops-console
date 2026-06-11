@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
-import CustomDataTable from "../../CustomComponent/CustomDataTable";
-import SlideOver from "../../CustomComponent/SlideOver";
-import { ControllerContext } from "../../ControllerProvider";
-import { FeedbackContext } from "../../Utils/FeedbackContext";
-import CustomActionModal from "../../CustomComponent/CustomActionModal";
-import CustomSelect from "../../CustomComponent/CustomSelect";
+import CustomDataTable from "@/components/ui/CustomDataTable";
+import SlideOver from "@/components/ui/SlideOver";
+import { ControllerContext } from "@/app/providers";
+import { FeedbackContext } from "@/app/providers";
+import CustomActionModal from "@/components/ui/CustomActionModal";
+import CustomSelect from "@/components/ui/CustomSelect";
 import { CopyableBlock } from "../components/SecureTextTools";
-import CryptoTextBox from "../../CustomComponent/CustomCryptoTextBox";
+import CryptoTextBox from "@/components/ui/CustomCryptoTextBox";
 import { useUnifiedYamlUpload } from "../../hooks/useUnifiedYamlUpload";
-import { useData } from "../../providers/Data";
+import { useData } from "@/app/providers";
 
 type ApplicationOption = {
   name: string;

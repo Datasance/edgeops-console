@@ -6,16 +6,16 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
-import CustomDataTable from "../../CustomComponent/CustomDataTable";
-import CustomActionModal from "../../CustomComponent/CustomActionModal";
-import CustomLoadingModal from "../../CustomComponent/CustomLoadingModal";
-import CustomSelect from "../../CustomComponent/CustomSelect";
-import SlideOver from "../../CustomComponent/SlideOver";
-import UnsavedChangesModal from "../../CustomComponent/UnsavedChangesModal";
-import { ControllerContext } from "../../ControllerProvider";
-import { FeedbackContext } from "../../Utils/FeedbackContext";
+import CustomDataTable from "@/components/ui/CustomDataTable";
+import CustomActionModal from "@/components/ui/CustomActionModal";
+import CustomLoadingModal from "@/components/ui/CustomLoadingModal";
+import CustomSelect from "@/components/ui/CustomSelect";
+import SlideOver from "@/components/ui/SlideOver";
+import UnsavedChangesModal from "@/components/ui/UnsavedChangesModal";
+import { ControllerContext } from "@/app/providers";
+import { FeedbackContext } from "@/app/providers";
 import { BadgeList } from "../../AccessControl/utils/badgeHelpers";
-import { generatePassword } from "../../Utils/generatePassword";
+import { generatePassword } from "@/lib/generatePassword";
 import {
   parseIdentityGroupList,
   parseIdentityUser,

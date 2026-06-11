@@ -1,7 +1,7 @@
 import React from "react";
-import { useController } from "../../ControllerProvider";
-import { useFeedback } from "../../Utils/FeedbackContext";
-import { useData } from "../../providers/Data";
+import { useController } from "@/app/providers";
+import { useFeedback } from "@/app/providers";
+import { useData } from "@/app/providers";
 import lget from "lodash/get";
 
 // Compact form styles using Tailwind classes

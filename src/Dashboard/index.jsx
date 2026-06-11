@@ -1,9 +1,9 @@
-import { useData } from '../providers/Data'
+import { useData } from '@/app/providers'
 import { Cpu, Boxes, ServerCog, Activity } from 'lucide-react'
 import AgentDashboard from './component/AgentDashboard'
 import MicroservicesDashboard from './component/MicroservicesDashboard'
 import SystemMicroservicesDashboard from './component/SystemMicroservicesDashboard'
-import { StatusType } from '../Utils/Enums/StatusColor'
+import { StatusType } from "@/lib/constants/Enums/StatusColor"
 
 const Dashboard = () => {
   const { data } = useData()
@@ -58,8 +58,8 @@ const Dashboard = () => {
         <div className='w-full max-w-none px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 3xl:px-20 py-6'>
           <div className='flex items-center justify-between'>
             <div>
-              <h1 className='text-3xl xl:text-4xl 2xl:text-5xl font-bold text-white mb-2'>Cluster Dashboard</h1>
-              <p className='text-gray-300 text-sm xl:text-base 2xl:text-lg'>Real-time cluster monitoring</p>
+              <h1 className='text-3xl xl:text-4xl 2xl:text-5xl font-bold text-white mb-2'>EdgeOps Console</h1>
+              <p className='text-gray-300 text-sm xl:text-base 2xl:text-lg'>Live visibility across edge nodes, microservices, and platform health</p>
             </div>
             <div className='text-right'>
               <div className='text-sm xl:text-base text-gray-400'>Last Updated</div>

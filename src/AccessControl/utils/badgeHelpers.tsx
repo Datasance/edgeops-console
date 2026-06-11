@@ -1,9 +1,37 @@
 import React from "react";
 
 interface BadgeListProps {
-  items: string[] | undefined;
+  items: string[] | string | undefined | null;
   emptyLabel?: string;
   className?: string;
+}
+
+/** Controller may return JSON-stringified arrays (e.g. agent availableRuntimes). */
+function normalizeBadgeItems(
+  items: string[] | string | undefined | null,
+): string[] {
+  if (items == null || items === "") {
+    return [];
+  }
+  if (Array.isArray(items)) {
+    return items.map(String);
+  }
+  if (typeof items === "string") {
+    const trimmed = items.trim();
+    if (!trimmed) {
+      return [];
+    }
+    if (trimmed.startsWith("[")) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        return Array.isArray(parsed) ? parsed.map(String) : [trimmed];
+      } catch {
+        return [trimmed];
+      }
+    }
+    return [trimmed];
+  }
+  return [];
 }
 
 /**
@@ -14,7 +42,9 @@ export const BadgeList: React.FC<BadgeListProps> = ({
   emptyLabel = "(all)",
   className = "",
 }) => {
-  if (!items || items.length === 0) {
+  const normalizedItems = normalizeBadgeItems(items);
+
+  if (normalizedItems.length === 0) {
     return (
       <span
         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-700 text-gray-300 ${className}`}
@@ -25,7 +55,9 @@ export const BadgeList: React.FC<BadgeListProps> = ({
   }
 
   // Handle empty string in array (means "core" API group)
-  const displayItems = items.map((item) => (item === "" ? "core" : item));
+  const displayItems = normalizedItems.map((item) =>
+    item === "" ? "core" : item,
+  );
 
   return (
     <div className={`flex flex-wrap gap-1.5 ${className}`}>

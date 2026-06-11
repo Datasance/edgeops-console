@@ -1,37 +1,37 @@
 import React, { useEffect, useState } from "react";
-import { useData } from "../../providers/Data";
-import ApplicationManager from "../../providers/Data/application-manager";
-import CustomDataTable from "../../CustomComponent/CustomDataTable";
-import CustomProgressBar from "../../CustomComponent/CustomProgressBar";
-import SlideOver from "../../CustomComponent/SlideOver";
+import { useData } from "@/app/providers";
+import ApplicationManager from "@/app/providers/Data/application-manager";
+import CustomDataTable from "@/components/ui/CustomDataTable";
+import CustomProgressBar from "@/components/ui/CustomProgressBar";
+import SlideOver from "@/components/ui/SlideOver";
 import { format, formatDistanceToNow } from "date-fns";
-import { useController } from "../../ControllerProvider";
-import { useFeedback } from "../../Utils/FeedbackContext";
-import { dumpMicroserviceYAML } from "../../Utils/microserviceYAML";
+import { useController } from "@/app/providers";
+import { useFeedback } from "@/app/providers";
+import { dumpMicroserviceYAML } from "@/lib/yaml/microserviceYAML";
 import { Trash2 as DeleteOutlineIcon } from "lucide-react";
-import UnsavedChangesModal from "../../CustomComponent/UnsavedChangesModal";
+import UnsavedChangesModal from "@/components/ui/UnsavedChangesModal";
 import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/ace";
 import "ace-builds/src-noconflict/theme-tomorrow";
 import "ace-builds/src-noconflict/mode-yaml";
-import { parseMicroservice } from "../../Utils/ApplicationParser";
+import { parseMicroservice } from "@/lib/yaml/ApplicationParser";
 import {
   isAllowedControllerApiVersion,
   invalidControllerApiVersionMessage,
-} from "../../Utils/constants";
+} from "@/lib/constants/constants";
 import lget from "lodash/get";
 import yaml from "js-yaml";
-import CryptoTextBox from "../../CustomComponent/CustomCryptoTextBox";
-import { getTextColor, prettyBytes } from "../../ECNViewer/utils";
-import { StatusColor, StatusType } from "../../Utils/Enums/StatusColor";
+import CryptoTextBox from "@/components/ui/CustomCryptoTextBox";
+import { getTextColor, prettyBytes } from "../../lib/formatting";
+import { StatusColor, StatusType } from "@/lib/constants/Enums/StatusColor";
 import { useLocation } from "react-router-dom";
 import { NavLink } from "react-router-dom";
 import { Pencil as EditOutlinedIcon } from "lucide-react";
-import { useTerminal } from "../../providers/Terminal/TerminalProvider";
-import { useLogViewer } from "../../providers/LogViewer/LogViewerProvider";
+import { useTerminal } from "@/app/providers";
+import { useLogViewer } from "@/app/providers";
 import LogConfigModal, {
   LogTailConfig,
-} from "../../CustomComponent/LogConfigModal";
+} from "@/components/ui/LogConfigModal";
 import { useAuth } from "../../auth";
 import { getWsBaseUrl } from "../../auth/api";
 

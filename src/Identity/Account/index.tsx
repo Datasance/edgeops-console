@@ -7,7 +7,7 @@ import {
   postMfaConfirm,
   postMfaEnroll,
 } from "../../auth/api";
-import { FeedbackContext } from "../../Utils/FeedbackContext";
+import { FeedbackContext } from "@/app/providers";
 import MfaEnrollQr from "../../auth/MfaEnrollQr";
 import { postMfaDisable } from "./api";
 

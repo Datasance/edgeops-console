@@ -1,10 +1,10 @@
 import React, { useEffect, useState, Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { RefreshCw as RefreshIcon, Download as GetAppIcon } from "lucide-react";
-import { ControllerContext } from "../ControllerProvider";
-import { FeedbackContext } from "../Utils/FeedbackContext";
-import SlideOver from "../CustomComponent/SlideOver";
-import CustomLoadingModal from "../CustomComponent/CustomLoadingModal";
+import { ControllerContext } from "@/app/providers";
+import { FeedbackContext } from "@/app/providers";
+import SlideOver from "@/components/ui/SlideOver";
+import CustomLoadingModal from "@/components/ui/CustomLoadingModal";
 import { formatDistanceToNow, format } from "date-fns";
 
 type AuditEvent = {
@@ -1175,7 +1175,7 @@ function Events() {
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <div className="fixed inset-0 bg-black bg-opacity-50 z-[110]" />
+            <div className="fixed inset-0 bg-black/50 z-[110]" />
           </Transition.Child>
 
           <div className="fixed inset-0 flex items-center justify-center p-4 z-[110]">

@@ -1,10 +1,11 @@
 import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
+import { vi } from "vitest";
 import App from "./App";
 
-jest.mock("./Layout", () => ({
+vi.mock("@/components/layout/AppLayout", () => ({
   __esModule: true,
-  default: function MockLayout() {
+  default: function MockAppLayout() {
     return (
       <div>
         <span>Overview</span>
@@ -16,7 +17,7 @@ jest.mock("./Layout", () => ({
   },
 }));
 
-jest.mock("./auth", () => {
+vi.mock("./auth", () => {
   const authState = {
     token: "test-token",
     initialized: true,
@@ -25,14 +26,14 @@ jest.mock("./auth", () => {
     hasRefreshToken: false,
     isLoading: false,
     user: { access_token: "test-token", profile: {} },
-    logout: jest.fn(),
-    signoutRedirect: jest.fn(),
+    logout: vi.fn(),
+    signoutRedirect: vi.fn(),
     hasRole: () => false,
-    setSession: jest.fn(),
-    updateProfile: jest.fn(),
-    reloadProfile: jest.fn(),
-    ensureFreshToken: jest.fn(),
-    refreshSession: jest.fn(),
+    setSession: vi.fn(),
+    updateProfile: vi.fn(),
+    reloadProfile: vi.fn(),
+    ensureFreshToken: vi.fn(),
+    refreshSession: vi.fn(),
   };
 
   return {
@@ -114,7 +115,7 @@ beforeEach(() => {
     },
   };
 
-  fetchMock = jest.fn((url, options) =>
+  fetchMock = vi.fn((url, options) =>
     Promise.resolve({
       ok: true,
       status: 200,
@@ -126,7 +127,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  jest.resetAllMocks();
+  vi.resetAllMocks();
 });
 
 it("renders without crashing", () => {

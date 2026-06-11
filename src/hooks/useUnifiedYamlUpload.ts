@@ -3,15 +3,15 @@ import {
   parseUnifiedYaml,
   ParsedResource,
   ResourceKind,
-} from "../Utils/unifiedYamlParser";
+} from "@/lib/yaml/unifiedYamlParser";
 import {
   checkResourceExists,
   getResourceEndpoint,
   getResourceMethod,
   preloadResourceCache,
   ResourceExistenceCache,
-} from "../Utils/resourceExistenceChecker";
-import { sanitizeRolePayload } from "../Utils/parseRoleYaml";
+} from "@/lib/resourceExistenceChecker";
+import { sanitizeRolePayload } from "@/lib/yaml/parseRoleYaml";
 
 export interface UploadResult {
   success: boolean;

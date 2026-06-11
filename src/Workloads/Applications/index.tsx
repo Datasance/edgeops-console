@@ -1,25 +1,25 @@
 import React, { useEffect, useState } from "react";
-import { useData } from "../../providers/Data";
-import CustomDataTable from "../../CustomComponent/CustomDataTable";
-import SlideOver from "../../CustomComponent/SlideOver";
+import { useData } from "@/app/providers";
+import CustomDataTable from "@/components/ui/CustomDataTable";
+import SlideOver from "@/components/ui/SlideOver";
 import { format, formatDistanceToNow } from "date-fns";
-import { useController } from "../../ControllerProvider";
-import { useFeedback } from "../../Utils/FeedbackContext";
-import { dumpApplicationYAML } from "../../Utils/applicationYAML";
-import UnsavedChangesModal from "../../CustomComponent/UnsavedChangesModal";
-import { parseMicroservice } from "../../Utils/ApplicationParser";
+import { useController } from "@/app/providers";
+import { useFeedback } from "@/app/providers";
+import { dumpApplicationYAML } from "@/lib/yaml/applicationYAML";
+import UnsavedChangesModal from "@/components/ui/UnsavedChangesModal";
+import { parseMicroservice } from "@/lib/yaml/ApplicationParser";
 import lget from "lodash/get";
 import {
   isAllowedControllerApiVersion,
   invalidControllerApiVersionMessage,
-} from "../../Utils/constants";
+} from "@/lib/constants/constants";
 import yaml from "js-yaml";
-import { StatusColor, StatusType } from "../../Utils/Enums/StatusColor";
-import { getTextColor } from "../../ECNViewer/utils";
+import { StatusColor, StatusType } from "@/lib/constants/Enums/StatusColor";
+import { getTextColor } from "../../lib/formatting";
 import { useLocation } from "react-router-dom";
 import { NavLink } from "react-router-dom";
-import { useTerminal } from "../../providers/Terminal/TerminalProvider";
-import ApplicationManager from "../../providers/Data/application-manager";
+import { useTerminal } from "@/app/providers";
+import ApplicationManager from "@/app/providers/Data/application-manager";
 import { useUnifiedYamlUpload } from "../../hooks/useUnifiedYamlUpload";
 
 function ApplicationList() {

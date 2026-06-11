@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { useData } from "../../providers/Data";
-import CustomDataTable from "../../CustomComponent/CustomDataTable";
-import CustomProgressBar from "../../CustomComponent/CustomProgressBar";
-import SlideOver from "../../CustomComponent/SlideOver";
+import { useData } from "@/app/providers";
+import CustomDataTable from "@/components/ui/CustomDataTable";
+import CustomProgressBar from "@/components/ui/CustomProgressBar";
+import SlideOver from "@/components/ui/SlideOver";
 import { formatDistanceToNow, format } from "date-fns";
-import { useController } from "../../ControllerProvider";
-import { useFeedback } from "../../Utils/FeedbackContext";
-import UnsavedChangesModal from "../../CustomComponent/UnsavedChangesModal";
-import CustomActionModal from "../../CustomComponent/CustomActionModal";
-import CryptoTextBox from "../../CustomComponent/CustomCryptoTextBox";
+import { useController } from "@/app/providers";
+import { useFeedback } from "@/app/providers";
+import UnsavedChangesModal from "@/components/ui/UnsavedChangesModal";
+import CustomActionModal from "@/components/ui/CustomActionModal";
+import CryptoTextBox from "@/components/ui/CustomCryptoTextBox";
 import "ace-builds/src-noconflict/ace";
 import "ace-builds/src-noconflict/theme-tomorrow";
 import "ace-builds/src-noconflict/mode-yaml";
@@ -17,18 +17,18 @@ import {
   getTextColor,
   MiBFactor,
   prettyBytes,
-} from "../../ECNViewer/utils";
-import { StatusColor, StatusType } from "../../Utils/Enums/StatusColor";
+} from "../../lib/formatting";
+import { StatusColor, StatusType } from "@/lib/constants/Enums/StatusColor";
 import { NavLink } from "react-router-dom";
 import { useLocation } from "react-router-dom";
-import { useTerminal } from "../../providers/Terminal/TerminalProvider";
-import { useLogViewer } from "../../providers/LogViewer/LogViewerProvider";
+import { useTerminal } from "@/app/providers";
+import { useLogViewer } from "@/app/providers";
 import LogConfigModal, {
   LogTailConfig,
-} from "../../CustomComponent/LogConfigModal";
+} from "@/components/ui/LogConfigModal";
 import ExecConfigModal, {
   ExecConfig,
-} from "../../CustomComponent/ExecConfigModal";
+} from "@/components/ui/ExecConfigModal";
 import { useAuth } from "../../auth";
 import { getApiV3BaseUrl, getWsBaseUrl } from "../../auth/api";
 import {
@@ -37,12 +37,12 @@ import {
   Eye as VisibilityIcon,
   EyeOff as VisibilityOffIcon,
 } from "lucide-react";
-import AgentManager from "../../providers/Data/agent-manager";
+import AgentManager from "@/app/providers/Data/agent-manager";
 import { useUnifiedYamlUpload } from "../../hooks/useUnifiedYamlUpload";
 import {
   buildAgentPatchBodyFromYamlContent,
   dumpAgentYAML,
-} from "../../Utils/agentYAML";
+} from "@/lib/yaml/agentYAML";
 import { BadgeList } from "../../AccessControl/utils/badgeHelpers";
 
 const formatDuration = (milliseconds: number): string => {

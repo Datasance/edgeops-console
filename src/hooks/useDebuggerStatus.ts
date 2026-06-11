@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useData } from "../providers/Data";
+import { useData } from "@/app/providers";
 
 type DebuggerStatus = "waiting" | "starting" | "running" | "error";
 

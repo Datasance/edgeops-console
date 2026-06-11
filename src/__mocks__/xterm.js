@@ -1,12 +1,14 @@
+import { vi } from "vitest";
+
 export class Terminal {
   constructor() {
-    this.onData = jest.fn();
-    this.loadAddon = jest.fn();
-    this.open = jest.fn();
-    this.dispose = jest.fn();
-    this.write = jest.fn();
-    this.reset = jest.fn();
-    this.resize = jest.fn();
-    this.focus = jest.fn();
+    this.onData = vi.fn();
+    this.loadAddon = vi.fn();
+    this.open = vi.fn();
+    this.dispose = vi.fn();
+    this.write = vi.fn();
+    this.reset = vi.fn();
+    this.resize = vi.fn();
+    this.focus = vi.fn();
   }
 }

@@ -1,4 +1,4 @@
 node_modules
 build
-src/setupProxy.js
+dist
 .cursor

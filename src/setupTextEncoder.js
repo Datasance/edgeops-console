@@ -1,10 +1,10 @@
 /**
- * Polyfill for Jest/jsdom (required by undici/cheerio on Node 24).
+ * Polyfill for Vitest/jsdom (required by undici/cheerio on Node 24).
  * Must run before setupTests.
  */
-const { TextEncoder, TextDecoder } = require("util");
-const { ReadableStream } = require("stream/web");
-const { MessagePort } = require("worker_threads");
+import { TextEncoder, TextDecoder } from "node:util";
+import { ReadableStream } from "node:stream/web";
+import { MessagePort } from "node:worker_threads";
 
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;

@@ -4,7 +4,7 @@ import {
   Check as CheckIcon,
   Braces as DecodeIcon,
 } from "lucide-react";
-import CustomActionModal from "../../CustomComponent/CustomActionModal";
+import CustomActionModal from "@/components/ui/CustomActionModal";
 
 const decodeJwtPayload = (jwt: string) => {
   try {

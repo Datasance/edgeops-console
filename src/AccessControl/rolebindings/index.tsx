@@ -1,20 +1,20 @@
 import React, { useEffect, useState } from "react";
-import CustomDataTable from "../../CustomComponent/CustomDataTable";
-import { ControllerContext } from "../../ControllerProvider";
-import { FeedbackContext } from "../../Utils/FeedbackContext";
-import SlideOver from "../../CustomComponent/SlideOver";
+import CustomDataTable from "@/components/ui/CustomDataTable";
+import { ControllerContext } from "@/app/providers";
+import { FeedbackContext } from "@/app/providers";
+import SlideOver from "@/components/ui/SlideOver";
 import { useLocation } from "react-router-dom";
 import "ace-builds/src-noconflict/ace";
 import "ace-builds/src-noconflict/theme-tomorrow";
 import "ace-builds/src-noconflict/mode-yaml";
 import yaml from "js-yaml";
-import CustomLoadingModal from "../../CustomComponent/CustomLoadingModal";
-import UnsavedChangesModal from "../../CustomComponent/UnsavedChangesModal";
-import { useTerminal } from "../../providers/Terminal/TerminalProvider";
-import { parseRoleBinding } from "../../Utils/parseRoleBindingYaml";
+import CustomLoadingModal from "@/components/ui/CustomLoadingModal";
+import UnsavedChangesModal from "@/components/ui/UnsavedChangesModal";
+import { useTerminal } from "@/app/providers";
+import { parseRoleBinding } from "@/lib/yaml/parseRoleBindingYaml";
 import { useUnifiedYamlUpload } from "../../hooks/useUnifiedYamlUpload";
 import { SubjectBadge } from "../utils/badgeHelpers";
-import { CANONICAL_DISPLAY_CONTROLLER_API_VERSION } from "../../Utils/constants";
+import { CANONICAL_DISPLAY_CONTROLLER_API_VERSION } from "@/lib/constants/constants";
 
 function RoleBindings() {
   const [fetching, setFetching] = React.useState(true);

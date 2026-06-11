@@ -21,7 +21,7 @@ import {
 } from "@mui/material";
 import { Eye, EyeOff } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
-import logomark from "../assets/potLogoWithWhiteText.svg";
+import { LOGO_ALT_TEXT, loginLogomark } from "../config/distribution";
 import {
   getInteractionStatus,
   postInteractionChangePassword,
@@ -34,10 +34,12 @@ import {
   type InteractionEnrollResponse,
   type InteractionStep,
 } from "./interactionApi";
+import { readStorageWithMigration } from "@/lib/storage/migrateKey";
 import MfaEnrollQr from "./MfaEnrollQr";
 import MfaStep from "./MfaStep";
 
-const REMEMBER_USERNAME_KEY = "ecn-viewer.login.username";
+const LEGACY_REMEMBER_USERNAME_KEY = "ecn-viewer.login.username";
+const REMEMBER_USERNAME_KEY = "edgeops-console.login.username";
 
 const OAuthInteractionPage: FC = () => {
   const [searchParams] = useSearchParams();
@@ -109,7 +111,11 @@ const OAuthInteractionPage: FC = () => {
   );
 
   useEffect(() => {
-    const savedUsername = localStorage.getItem(REMEMBER_USERNAME_KEY);
+    const savedUsername = readStorageWithMigration(
+      localStorage,
+      REMEMBER_USERNAME_KEY,
+      LEGACY_REMEMBER_USERNAME_KEY,
+    );
     if (savedUsername) {
       setUsername(savedUsername);
       setRememberMe(true);
@@ -272,7 +278,7 @@ const OAuthInteractionPage: FC = () => {
               py: 2,
             }}
           >
-            <img src={logomark} alt="ECN Viewer" style={{ height: 40 }} />
+            <img src={loginLogomark} alt={LOGO_ALT_TEXT} style={{ height: 40 }} />
           </Box>
 
           {error ? (

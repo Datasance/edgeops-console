@@ -1,7 +1,5 @@
 /**
- * TextEncoder/TextDecoder polyfill must run first (Node 24 / Jest jsdom).
- * Using require() so it runs before enzyme/cheerio/undici load.
+ * TextEncoder/TextDecoder polyfill must run first (Node 24 / Vitest jsdom).
  */
-require("./setupTextEncoder.js");
-
-require("@testing-library/jest-dom");
+import "./setupTextEncoder.js";
+import "@testing-library/jest-dom/vitest";

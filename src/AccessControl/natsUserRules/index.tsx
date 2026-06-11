@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from "react";
-import CustomDataTable from "../../CustomComponent/CustomDataTable";
-import { ControllerContext } from "../../ControllerProvider";
-import { FeedbackContext } from "../../Utils/FeedbackContext";
-import SlideOver from "../../CustomComponent/SlideOver";
+import CustomDataTable from "@/components/ui/CustomDataTable";
+import { ControllerContext } from "@/app/providers";
+import { FeedbackContext } from "@/app/providers";
+import SlideOver from "@/components/ui/SlideOver";
 import { useLocation } from "react-router-dom";
 import yaml from "js-yaml";
-import CustomLoadingModal from "../../CustomComponent/CustomLoadingModal";
-import UnsavedChangesModal from "../../CustomComponent/UnsavedChangesModal";
-import { useTerminal } from "../../providers/Terminal/TerminalProvider";
-import { parseNatsUserRule } from "../../Utils/parseNatsUserRuleYaml";
+import CustomLoadingModal from "@/components/ui/CustomLoadingModal";
+import UnsavedChangesModal from "@/components/ui/UnsavedChangesModal";
+import { useTerminal } from "@/app/providers";
+import { parseNatsUserRule } from "@/lib/yaml/parseNatsUserRuleYaml";
 import { useUnifiedYamlUpload } from "../../hooks/useUnifiedYamlUpload";
-import { isReservedNatsRule } from "../../Utils/natsRules";
-import { CANONICAL_DISPLAY_CONTROLLER_API_VERSION } from "../../Utils/constants";
+import { isReservedNatsRule } from "@/lib/natsRules";
+import { CANONICAL_DISPLAY_CONTROLLER_API_VERSION } from "@/lib/constants/constants";
 
 const getRuleSpec = (rule: any) => {
   if (!rule) return {};

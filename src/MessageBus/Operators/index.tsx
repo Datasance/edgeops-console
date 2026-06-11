@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 // import { RotateCcw as RotateIcon } from "lucide-react";
-import { ControllerContext } from "../../ControllerProvider";
-import { FeedbackContext } from "../../Utils/FeedbackContext";
+import { ControllerContext } from "@/app/providers";
+import { FeedbackContext } from "@/app/providers";
 import { useUnifiedYamlUpload } from "../../hooks/useUnifiedYamlUpload";
-import YamlUploadDropzone from "../../CustomComponent/YamlUploadDropzone";
+import YamlUploadDropzone from "@/components/yaml/YamlUploadDropzone";
 import { CopyableBlock } from "../components/SecureTextTools";
 
 function Operators() {

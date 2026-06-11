@@ -1,5 +1,7 @@
+import { vi } from "vitest";
+
 export class FitAddon {
-  activate = jest.fn();
-  dispose = jest.fn();
-  fit = jest.fn();
+  activate = vi.fn();
+  dispose = vi.fn();
+  fit = vi.fn();
 }

@@ -1,8 +1,8 @@
 import React from "react";
 import { Cpu } from "lucide-react";
 import ApexCharts from "react-apexcharts";
-import { StatusColor, StatusType } from "../../Utils/Enums/StatusColor";
-import { MiBFactor, prettyBytes } from "../../ECNViewer/utils";
+import { StatusColor, StatusType } from "@/lib/constants/Enums/StatusColor";
+import { MiBFactor, prettyBytes } from "../../lib/formatting";
 
 interface AgentData {
   uuid: string;

@@ -1,9 +1,12 @@
+import { readStorageWithMigration } from "@/lib/storage/migrateKey";
+
 export type TokenPair = {
   accessToken: string;
   refreshToken?: string;
 };
 
-const STORAGE_KEY = "ecn-viewer.auth.tokens";
+const LEGACY_STORAGE_KEY = "ecn-viewer.auth.tokens";
+const STORAGE_KEY = "edgeops-console.auth.tokens";
 
 let accessToken: string | null = null;
 let refreshToken: string | null = null;
@@ -20,6 +23,7 @@ function persistToStorage(tokens: TokenPair | null): void {
   try {
     if (!tokens) {
       sessionStorage.removeItem(STORAGE_KEY);
+      sessionStorage.removeItem(LEGACY_STORAGE_KEY);
       return;
     }
     sessionStorage.setItem(
@@ -36,7 +40,11 @@ function persistToStorage(tokens: TokenPair | null): void {
 
 function readFromStorage(): TokenPair | null {
   try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
+    const raw = readStorageWithMigration(
+      sessionStorage,
+      STORAGE_KEY,
+      LEGACY_STORAGE_KEY,
+    );
     if (!raw) {
       return null;
     }

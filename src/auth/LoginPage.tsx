@@ -7,7 +7,7 @@ import {
   CardContent,
   Typography,
 } from "@mui/material";
-import logomark from "../assets/potLogoWithWhiteText.svg";
+import { LOGO_ALT_TEXT, loginLogomark } from "../config/distribution";
 import { buildOAuthAuthorizeUrl } from "./oauth";
 
 const LoginPage: FC = () => {
@@ -42,7 +42,7 @@ const LoginPage: FC = () => {
               py: 2,
             }}
           >
-            <img src={logomark} alt="ECN Viewer" style={{ height: 40 }} />
+            <img src={loginLogomark} alt={LOGO_ALT_TEXT} style={{ height: 40 }} />
           </Box>
 
           <Typography variant="h6" component="h1" gutterBottom>

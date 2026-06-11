@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import CustomDataTable from "../../CustomComponent/CustomDataTable";
-import CustomActionModal from "../../CustomComponent/CustomActionModal";
-import CustomLoadingModal from "../../CustomComponent/CustomLoadingModal";
-import SlideOver from "../../CustomComponent/SlideOver";
-import UnsavedChangesModal from "../../CustomComponent/UnsavedChangesModal";
-import { ControllerContext } from "../../ControllerProvider";
-import { FeedbackContext } from "../../Utils/FeedbackContext";
+import CustomDataTable from "@/components/ui/CustomDataTable";
+import CustomActionModal from "@/components/ui/CustomActionModal";
+import CustomLoadingModal from "@/components/ui/CustomLoadingModal";
+import SlideOver from "@/components/ui/SlideOver";
+import UnsavedChangesModal from "@/components/ui/UnsavedChangesModal";
+import { ControllerContext } from "@/app/providers";
+import { FeedbackContext } from "@/app/providers";
 import { parseIdentityGroup, parseIdentityGroupList } from "./parseApi";
 import type { GroupFormDraft, IdentityGroup } from "./types";
 
