@@ -1,15 +1,19 @@
 import React from "react";
 import { useAuth } from "../auth";
+import { getApiBase } from "../auth/apiBase";
 import { useFeedback } from "../Utils/FeedbackContext";
 
 const controllerConfig = window.controllerConfig || {};
 const IPLookUp = "http://ip-api.com/json/";
 
-const getBaseUrl = () =>
-  controllerConfig.url ||
-  `${window.location.protocol}//${[window.location.hostname, controllerConfig.port].join(":")}`;
+const getBaseUrl = () => getApiBase(controllerConfig);
 
-const getUrl = (path) => `${getBaseUrl()}${path}`;
+const getUrl = (path) => {
+  if (/^https?:\/\//i.test(path)) {
+    return path;
+  }
+  return `${getBaseUrl()}${path}`;
+};
 
 export const ControllerContext = React.createContext();
 export const useController = () => React.useContext(ControllerContext);
@@ -52,14 +56,22 @@ const getControllerStatus = async () => {
   return null;
 };
 
+const parseErrorBody = async (response) => {
+  try {
+    return await response.json();
+  } catch (e) {
+    return {
+      message: response.statusText || "An error occurred",
+    };
+  }
+};
+
 export const ControllerProvider = ({ children }) => {
   const [state, dispatch] = React.useReducer(reducer, initState);
   const auth = useAuth();
   const feedbackContext = useFeedback();
   const pushFeedback = feedbackContext?.pushFeedback;
 
-  // Keep a ref so request() always uses the latest token at call time (e.g. YAML/Deploy
-  // save after the drawer has been open and the token was refreshed).
   const authRef = React.useRef(auth);
   authRef.current = auth;
 
@@ -67,62 +79,95 @@ export const ControllerProvider = ({ children }) => {
     dispatch({ type: "UPDATE", data });
   };
 
-  const request = async (path, options = {}) => {
+  const request = async (path, options = {}, attempt = 0) => {
+    const currentAuth = authRef.current;
+    let token = currentAuth?.token;
+
+    if (currentAuth?.ensureFreshToken) {
+      try {
+        const freshToken = await currentAuth.ensureFreshToken();
+        if (freshToken) {
+          token = freshToken;
+        }
+      } catch (error) {
+        console.error("Token refresh before request failed:", error);
+      }
+    }
+
     const headers = {
       ...options.headers,
     };
-    const token = authRef.current?.token;
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
 
+    let response;
     try {
-      const response = await fetch(getUrl(path), {
+      response = await fetch(getUrl(path), {
         ...options,
         headers: { ...headers },
       });
-
-      if (!response.ok) {
-        const status = response.status;
-        let errorData;
-
-        try {
-          errorData = await response.json();
-        } catch (e) {
-          // If response is not JSON, create a basic error object
-          errorData = {
-            message: response.statusText || "An error occurred",
-          };
-        }
-
-        // Check for authorization errors (401 Unauthorized or 403 Forbidden)
-        if ((status === 401 || status === 403) && pushFeedback) {
-          const errorMessage =
-            errorData.message ||
-            (status === 401
-              ? "Unauthorized: You don't have permission to access this resource"
-              : "Forbidden: Access to this resource is denied");
-
-          pushFeedback({
-            message: errorMessage,
-            type: "error",
-          });
-        }
-
-        // Return error object with status and ok properties for backward compatibility
-        return {
-          ...errorData,
-          ok: false,
-          status: status,
-          statusText: response.statusText,
-        };
-      }
-
-      return response;
     } catch (error) {
       console.error("Request failed:", error);
       return null;
     }
+
+    if (response.ok) {
+      return response;
+    }
+
+    const status = response.status;
+    const errorData = await parseErrorBody(response);
+
+    if (status === 401 && attempt === 0 && currentAuth?.refreshSession) {
+      try {
+        const refreshed = await currentAuth.refreshSession();
+        if (refreshed) {
+          return request(path, options, attempt + 1);
+        }
+      } catch (error) {
+        console.error("401 refresh attempt failed:", error);
+        return {
+          ...errorData,
+          ok: false,
+          status,
+          statusText: response.statusText,
+        };
+      }
+
+      if (currentAuth?.hasRefreshToken) {
+        if (currentAuth?.logout) {
+          currentAuth.logout();
+        }
+        window.location.replace(`${window.location.origin}/#/login`);
+      }
+      return {
+        ...errorData,
+        ok: false,
+        status,
+        statusText: response.statusText,
+      };
+    }
+
+    if ((status === 401 || status === 403) && pushFeedback) {
+      const errorMessage =
+        errorData.message ||
+        (status === 401
+          ? "Unauthorized: You don't have permission to access this resource"
+          : "Forbidden: Access to this resource is denied");
+
+      pushFeedback({
+        message: errorMessage,
+        type: "error",
+      });
+    }
+
+    return {
+      ...errorData,
+      ok: false,
+      status,
+      statusText: response.statusText,
+    };
   };
 
   React.useEffect(() => {

@@ -2,7 +2,7 @@ import React from "react";
 import { useController } from "../../ControllerProvider";
 import { find, groupBy, get } from "lodash";
 import useRecursiveTimeout from "../../hooks/useInterval";
-import { useOidcAuth } from "../../auth";
+import { useAuth } from "../../auth";
 import { usePollingConfig } from "../PollingConfig/PollingConfigProvider";
 
 import AgentManager from "./agent-manager";
@@ -142,7 +142,7 @@ export const DataProvider = ({ children }) => {
   const [loading, setLoading] = React.useState(true);
   const { getPollingInterval } = usePollingConfig();
   const [error, setError] = React.useState(false);
-  const { oidc, initialized } = useOidcAuth();
+  const { isAuthenticated } = useAuth();
 
   // Get polling interval from config, fallback to controller config or default
   const [timeout, setTimeout] = React.useState(() => {
@@ -191,8 +191,7 @@ export const DataProvider = ({ children }) => {
   }, [getPollingInterval, timeout]);
 
   const update = async () => {
-    // Only update if we're initialized or not using auth
-    if (!oidc || initialized) {
+    if (isAuthenticated) {
       // List fogs
       let agents = [];
       try {
