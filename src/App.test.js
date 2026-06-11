@@ -21,39 +21,24 @@ jest.mock("./auth", () => {
     token: "test-token",
     initialized: true,
     isAuthenticated: true,
-    user: { access_token: "test-token" },
-  };
-  const oidcState = {
-    oidc: { isAuthenticated: true, isLoading: false },
-    initialized: true,
-    token: "test-token",
-    isAuthenticated: true,
-    logout: jest.fn(),
-    hasRole: () => false,
-  };
-
-  return {
-    OidcAuthProvider: ({ children }) => children,
-    useOidcAuth: () => oidcState,
-    useAuth: () => authState,
-  };
-});
-
-jest.mock("react-oidc-context", () => {
-  const authState = {
+    isSessionValidating: false,
+    hasRefreshToken: false,
     isLoading: false,
-    isAuthenticated: true,
     user: { access_token: "test-token", profile: {} },
-    signinRedirect: jest.fn(),
+    logout: jest.fn(),
     signoutRedirect: jest.fn(),
-    events: {
-      addAccessTokenExpired: jest.fn(() => jest.fn()),
-    },
+    hasRole: () => false,
+    setSession: jest.fn(),
+    updateProfile: jest.fn(),
+    reloadProfile: jest.fn(),
+    ensureFreshToken: jest.fn(),
+    refreshSession: jest.fn(),
   };
 
   return {
     AuthProvider: ({ children }) => children,
     useAuth: () => authState,
+    getApiBase: (config) => config.publicUrl || "http://localhost:51121",
   };
 });
 
@@ -114,9 +99,19 @@ let fetchMock;
 
 beforeEach(() => {
   window.controllerConfig = {
-    port: "51121",
-    oidcIssuerUrl: "http://localhost:8080/realms/datasance",
-    oidcClientId: "ecn-viewer",
+    apiPort: 51121,
+    publicUrl: "http://localhost:51121",
+    viewerUrl: "http://localhost:3000",
+    auth: {
+      mode: "embedded",
+      loginUrl: "/api/v3/user/login",
+      refreshUrl: "/api/v3/user/refresh",
+      logoutUrl: "/api/v3/user/logout",
+      profileUrl: "/api/v3/user/profile",
+      changePasswordUrl: "/api/v3/user/change-password",
+      oauthAuthorizeUrl: "/api/v3/user/oauth/authorize",
+      oauthInteractionUrl: "/login/oauth",
+    },
   };
 
   fetchMock = jest.fn((url, options) =>
