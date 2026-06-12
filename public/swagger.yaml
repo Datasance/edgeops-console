@@ -245,6 +245,17 @@ paths:
             enum:
               - upgrade
               - rollback
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                semver:
+                  type: string
+                  description: Target semver for upgrade or rollback
+                  pattern: ^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:[+]([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$
       security:
         - authToken: []
       responses:
@@ -8198,20 +8209,6 @@ components:
           format: date-time
         restartRequired:
           type: boolean
-    VersionCommandResponse:
-      type: object
-      required:
-        - versionCommand
-        - provisionKey
-        - expirationTime
-        - versionSemantic
-      properties:
-        versionCommand:
-          type: string
-        provisionKey:
-          type: string
-        expirationTime:
-          type: string
     HalInfo:
       type: object
       required:
