@@ -25,7 +25,10 @@ import {
   isAllowedControllerApiVersion,
   invalidControllerApiVersionMessage,
 } from "@/lib/constants/constants";
-import { appendImageToYamlAcc } from "@/lib/imageArchYAML";
+import {
+  buildMicroserviceYamlFields,
+  dumpAnnotatedYaml,
+} from "@/lib/yaml/microserviceYAML";
 
 function AppTemplates() {
   const {
@@ -249,83 +252,12 @@ function AppTemplates() {
 
     const { name, description, variables, application } =
       selectedApplicationTemplate;
-    const microservices = application.microservices?.map((ms: any) => {
-      let parsedConfig: any = {};
-      try {
-        parsedConfig =
-          typeof ms?.config === "string"
-            ? JSON.parse(ms.config)
-            : ms.config || {};
-      } catch (e) {
-        console.warn(`Failed to parse config for ${ms.name}:`, e);
-        parsedConfig = ms.config;
-      }
-
-      return {
-        name: ms.name,
-        agent: {
-          name: ms.agentName,
-        },
-        images: (ms.images || []).reduce(
-          (acc: Record<string, unknown>, image: { archId?: number; containerImage?: string }) =>
-            appendImageToYamlAcc(acc, image),
-          {
-            registry: ms.registryId ?? null,
-            catalogId: ms.catalogItemId ?? null,
-          },
-        ),
-        container: {
-          annotations: JSON.parse(ms.annotations || "{}"),
-          hostNetworkMode: ms.hostNetworkMode ?? false,
-          isPrivileged: ms.isPrivileged ?? false,
-          runAsUser: ms.runAsUser ?? null,
-          ipcMode: ms?.ipcMode ?? "",
-          pidMode: ms?.pidMode ?? "",
-          platform: ms.platform ?? null,
-          runtime: ms.runtime ?? null,
-          cdiDevices: ms.cdiDevices ?? [],
-          capAdd: ms.capAdd ?? [],
-          capDrop: ms.capDrop ?? [],
-          volumes: (ms.volumeMappings || []).map((vm: any) => {
-            const { id, ...rest } = vm;
-            return rest;
-          }),
-          env: (ms.env || []).map((env: any) => {
-            const { id, ...rest } = env;
-            const cleanedEnv: any = { ...rest };
-            if (
-              cleanedEnv.valueFromSecret === null ||
-              cleanedEnv.valueFromSecret === undefined
-            ) {
-              delete cleanedEnv.valueFromSecret;
-            }
-            if (
-              cleanedEnv.valueFromConfigMap === null ||
-              cleanedEnv.valueFromConfigMap === undefined
-            ) {
-              delete cleanedEnv.valueFromConfigMap;
-            }
-            return cleanedEnv;
-          }),
-          extraHosts: (ms.extraHosts || []).map((eH: any) => {
-            const { id, ...rest } = eH;
-            return rest;
-          }),
-          ports: ms.ports ?? [],
-          commands: Array.isArray(ms.cmd) ? [...ms.cmd] : [],
-          cpuSetCpus: ms?.cpuSetCpus ?? "",
-          ...(ms?.memoryLimit !== undefined &&
-            ms?.memoryLimit !== null && { memoryLimit: ms.memoryLimit }),
-          healthCheck: ms?.healthCheck ?? {},
-        },
-        schedule: ms?.schedule ?? 50,
-        natsConfig: {
-          natsAccess: ms?.natsConfig?.natsAccess ?? ms?.natsAccess ?? false,
-          ...(ms?.natsConfig?.natsRule && { natsRule: ms.natsConfig.natsRule }),
-        },
-        config: parsedConfig,
-      };
-    });
+    const microservices = application.microservices?.map((ms: any) =>
+      buildMicroserviceYamlFields(ms, {
+        includeName: true,
+        includeAgent: true,
+      }),
+    );
 
     const yamlDump = {
       apiVersion: CANONICAL_DISPLAY_CONTROLLER_API_VERSION,
@@ -354,7 +286,7 @@ function AppTemplates() {
       },
     };
 
-    const yamlString = yaml.dump(yamlDump, { noRefs: true, indent: 2 });
+    const yamlString = dumpAnnotatedYaml(yamlDump);
 
     // Add YAML editor session to global state
     addYamlSession({

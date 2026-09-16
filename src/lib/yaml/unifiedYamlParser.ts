@@ -21,6 +21,10 @@ import { parseMicroservice } from "./ApplicationParser";
 import { parseAgentYamlDocument } from "./agentYAML";
 import { parseNatsAccountRule } from "./parseNatsAccountRuleYaml";
 import { parseNatsUserRule } from "./parseNatsUserRuleYaml";
+import { parseModelYaml } from "./parseModelYaml";
+import { parseRuntimeClassYaml } from "./parseRuntimeClassYaml";
+import { parseMicroserviceTemplateYaml } from "./parseMicroserviceTemplateYaml";
+import { applyMicroserviceFqName } from "./ApplicationParser";
 
 export type ResourceKind =
   | "Service"
@@ -39,7 +43,10 @@ export type ResourceKind =
   | "RoleBinding"
   | "ServiceAccount"
   | "NatsAccountRule"
-  | "NatsUserRule";
+  | "NatsUserRule"
+  | "Model"
+  | "RuntimeClass"
+  | "MicroserviceTemplate";
 
 export interface ParsedResource {
   kind: ResourceKind;
@@ -85,6 +92,9 @@ export function getResourceKind(doc: any): ResourceKind | null {
     "ServiceAccount",
     "NatsAccountRule",
     "NatsUserRule",
+    "Model",
+    "RuntimeClass",
+    "MicroserviceTemplate",
   ];
 
   if (validKinds.includes(kind as ResourceKind)) {
@@ -111,6 +121,9 @@ export function getResourceIdentifier(
     case "CatalogItem":
     case "ApplicationTemplate":
     case "Application":
+    case "Model":
+    case "RuntimeClass":
+    case "MicroserviceTemplate":
     case "Role":
     case "RoleBinding":
     case "ServiceAccount": {
@@ -257,10 +270,10 @@ async function routeToParser(
           return [{}, "Invalid YAML format"] as [any, string | null];
         }
         const tempObject = await parseMicroservice(doc.spec);
-        const microserviceData = {
+        const microserviceData = applyMicroserviceFqName({
           name: lget(doc, "metadata.name", undefined),
           ...tempObject,
-        };
+        });
         return [microserviceData, null] as [any, string | null];
       }
       case "Agent": {
@@ -280,6 +293,15 @@ async function routeToParser(
         break;
       case "NatsUserRule":
         result = await parseNatsUserRule(doc);
+        break;
+      case "Model":
+        result = await parseModelYaml(doc);
+        break;
+      case "RuntimeClass":
+        result = await parseRuntimeClassYaml(doc);
+        break;
+      case "MicroserviceTemplate":
+        result = await parseMicroserviceTemplateYaml(doc);
         break;
       default:
         return [null, `Unsupported resource kind: ${kind}`] as [
@@ -325,7 +347,11 @@ function sortByDependencies(docs: any[]): any[] {
     "NatsAccountRule",
     "NatsUserRule",
     "Registry",
+    "Model",
+    "RuntimeClass",
     "CatalogItem",
+    "ApplicationTemplate",
+    "MicroserviceTemplate",
     "Application",
     "Microservice",
     "Service",
