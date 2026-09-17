@@ -1,8 +1,10 @@
 import lget from "lodash/get";
 import { mapYamlImagesToArray } from "@/lib/imageArchYAML";
 import { resolveRegistryId } from "./resolveRegistryId";
+import { isTemplatePlaceholder } from "./yamlTemplatePlaceholders";
 
-const parseMicroserviceImages = async (fileImages) => {
+const parseMicroserviceImages = async (fileImages, options = {}) => {
+  const templateMode = options.templateMode === true;
   if (!fileImages) {
     return {
       registryId: undefined,
@@ -20,7 +22,10 @@ const parseMicroserviceImages = async (fileImages) => {
     };
   }
   const images = mapYamlImagesToArray(fileImages);
-  const registryId = resolveRegistryId(fileImages.registry);
+  const registryId = resolveRegistryId(
+    fileImages.registry,
+    templateMode ? undefined : 1,
+  );
   return { registryId, catalogItemId: undefined, images };
 };
 
@@ -31,6 +36,9 @@ const _deleteEmptyWireFields = (obj) =>
 
 /** Empty YAML number keys (null / "") must not be sent on POST/PATCH. */
 const parseOptionalContainerNumber = (value) => {
+  if (isTemplatePlaceholder(value)) {
+    return value;
+  }
   if (value === undefined || value === null || value === "") {
     return undefined;
   }
@@ -109,9 +117,10 @@ export const applyMicroserviceFqName = (parsed) => {
   return parsed;
 };
 
-export const parseMicroservice = async (microservice) => {
+export const parseMicroservice = async (microservice, options = {}) => {
   const { registryId, catalogItemId, images } = await parseMicroserviceImages(
     microservice.images,
+    options,
   );
   // Parse serviceAccount.roleRef if present
   let serviceAccount;

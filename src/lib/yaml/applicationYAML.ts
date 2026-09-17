@@ -3,6 +3,7 @@ import {
   buildMicroserviceYamlFields,
   dumpAnnotatedYaml,
 } from "./microserviceYAML";
+import { isTemplatePlaceholder } from "./yamlTemplatePlaceholders";
 
 interface Agent {
   uuid: string;
@@ -63,7 +64,11 @@ export const getApplicationYAMLFromJSON = ({
         ? {
             natsConfig: {
               ...(resolvedApplicationNatsAccess !== undefined && {
-                natsAccess: Boolean(resolvedApplicationNatsAccess),
+                natsAccess: isTemplatePlaceholder(
+                  resolvedApplicationNatsAccess,
+                )
+                  ? resolvedApplicationNatsAccess
+                  : Boolean(resolvedApplicationNatsAccess),
               }),
               ...(resolvedApplicationNatsRule && {
                 natsRule: resolvedApplicationNatsRule,

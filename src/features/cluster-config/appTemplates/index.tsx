@@ -29,6 +29,11 @@ import {
   buildMicroserviceYamlFields,
   dumpAnnotatedYaml,
 } from "@/lib/yaml/microserviceYAML";
+import {
+  dumpTemplateSchemaVariables,
+  normalizeTemplateSchemaVariables,
+} from "@/lib/yaml/templateSchemaVariables";
+import { isTemplatePlaceholder } from "@/lib/yaml/yamlTemplatePlaceholders";
 
 function AppTemplates() {
   const {
@@ -204,7 +209,7 @@ function AppTemplates() {
       ...applicationYAML,
       microservices: await Promise.all(
         (applicationYAML.microservices || []).map(async (m: any) =>
-          parseMicroservice(m),
+          parseMicroservice(m, { templateMode: true }),
         ),
       ),
     };
@@ -227,7 +232,8 @@ function AppTemplates() {
       name: lget(doc, "metadata.name", lget(doc, "spec.name", undefined)),
       description: lget(doc, "spec.description", ""),
       application,
-      variables: lget(doc, "spec.variables", []),
+      variables:
+        normalizeTemplateSchemaVariables(lget(doc, "spec.variables")) ?? [],
     };
 
     return [applicationTemplate];
@@ -256,6 +262,7 @@ function AppTemplates() {
       buildMicroserviceYamlFields(ms, {
         includeName: true,
         includeAgent: true,
+        templateMode: true,
       }),
     );
 
@@ -267,15 +274,15 @@ function AppTemplates() {
       },
       spec: {
         description: description,
-        variables: variables.map((v: any) => ({
-          key: v.key,
-          description: v.description,
-          defaultValue: v.defaultValue,
-        })),
+        variables: dumpTemplateSchemaVariables(variables) ?? [],
         application: {
           ...(application?.natsConfig && {
             natsConfig: {
-              natsAccess: Boolean(application.natsConfig.natsAccess),
+              natsAccess: isTemplatePlaceholder(
+                application.natsConfig.natsAccess,
+              )
+                ? application.natsConfig.natsAccess
+                : Boolean(application.natsConfig.natsAccess),
               ...(application.natsConfig.natsRule && {
                 natsRule: application.natsConfig.natsRule,
               }),

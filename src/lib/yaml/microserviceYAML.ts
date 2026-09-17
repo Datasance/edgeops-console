@@ -1,6 +1,7 @@
 import yaml from "js-yaml";
 import { CANONICAL_DISPLAY_CONTROLLER_API_VERSION } from "@/lib/constants/constants";
 import { appendImageToYamlAcc } from "@/lib/imageArchYAML";
+import { isTemplatePlaceholder } from "./yamlTemplatePlaceholders";
 
 interface Agent {
   uuid: string;
@@ -24,6 +25,7 @@ export interface BuildMicroserviceYamlOptions {
   includeUuid?: boolean;
   includeApplication?: boolean;
   includeAgent?: boolean;
+  templateMode?: boolean;
 }
 
 export const MICROSERVICE_CONTAINER_YAML_KEYS = [
@@ -93,7 +95,15 @@ const asString = (value: unknown): string => {
   return String(value);
 };
 
-const asBoolean = (value: unknown): boolean => value === true;
+const dumpBoolean = (value: unknown, fallback = false): unknown => {
+  if (isTemplatePlaceholder(value)) {
+    return value;
+  }
+  if (value === true || value === false) {
+    return value;
+  }
+  return fallback;
+};
 
 const asArray = (value: unknown): unknown[] =>
   Array.isArray(value) ? value : [];
@@ -114,6 +124,20 @@ const asNumberOrEmpty = (value: unknown): number | null => {
   }
   const parsed = Number(value);
   return Number.isNaN(parsed) ? null : parsed;
+};
+
+const dumpNumberOrEmpty = (value: unknown): unknown => {
+  if (isTemplatePlaceholder(value)) {
+    return value;
+  }
+  return asNumberOrEmpty(value);
+};
+
+const dumpString = (value: unknown): unknown => {
+  if (isTemplatePlaceholder(value)) {
+    return value;
+  }
+  return asString(value);
 };
 
 const parseJsonObject = (value: unknown): Record<string, unknown> => {
@@ -207,26 +231,26 @@ export const buildMicroserviceContainerYaml = (
   reducedAgents: ReducedAgents = { byUUID: {} },
 ): Record<string, unknown> => {
   const container: Record<string, unknown> = {
-    hostNetworkMode: asBoolean(ms?.hostNetworkMode),
-    isPrivileged: asBoolean(ms?.isPrivileged),
-    runAsUser: asString(ms?.runAsUser),
-    runAsGroup: asString(ms?.runAsGroup),
-    readOnlyRootFilesystem: asBoolean(ms?.readOnlyRootFilesystem),
-    ipcMode: asString(ms?.ipcMode),
-    pidMode: asString(ms?.pidMode),
-    platform: asString(ms?.platform),
-    runtime: asString(ms?.runtime),
+    hostNetworkMode: dumpBoolean(ms?.hostNetworkMode),
+    isPrivileged: dumpBoolean(ms?.isPrivileged),
+    runAsUser: dumpString(ms?.runAsUser),
+    runAsGroup: dumpString(ms?.runAsGroup),
+    readOnlyRootFilesystem: dumpBoolean(ms?.readOnlyRootFilesystem),
+    ipcMode: dumpString(ms?.ipcMode),
+    pidMode: dumpString(ms?.pidMode),
+    platform: dumpString(ms?.platform),
+    runtime: dumpString(ms?.runtime),
     capAdd: asArray(ms?.capAdd),
     capDrop: asArray(ms?.capDrop),
     annotations: parseJsonObject(ms?.annotations),
     sysctls: asObject(ms?.sysctls),
     ulimits: asObject(ms?.ulimits),
-    cpuSetCpus: asString(ms?.cpuSetCpus),
-    cpus: asNumberOrEmpty(ms?.cpus),
-    memoryLimit: asNumberOrEmpty(ms?.memoryLimit),
-    memoryReservation: asNumberOrEmpty(ms?.memoryReservation),
-    memorySwap: asNumberOrEmpty(ms?.memorySwap),
-    shmSize: asNumberOrEmpty(ms?.shmSize),
+    cpuSetCpus: dumpString(ms?.cpuSetCpus),
+    cpus: dumpNumberOrEmpty(ms?.cpus),
+    memoryLimit: dumpNumberOrEmpty(ms?.memoryLimit),
+    memoryReservation: dumpNumberOrEmpty(ms?.memoryReservation),
+    memorySwap: dumpNumberOrEmpty(ms?.memorySwap),
+    shmSize: dumpNumberOrEmpty(ms?.shmSize),
     cdiDevices: asArray(ms?.cdiDevices),
     devices: asArray(ms?.devices),
     volumes: asArray(ms?.volumeMappings).map((vm: any) => {
@@ -246,7 +270,7 @@ export const buildMicroserviceContainerYaml = (
       }
       return port;
     }),
-    workingDir: asString(ms?.workingDir),
+    workingDir: dumpString(ms?.workingDir),
     entrypoint: asArray(ms?.entrypoint),
     commands: resolveDumpCommands(ms),
     healthCheck: asObject(ms?.healthCheck),
@@ -272,17 +296,27 @@ export const buildMicroserviceYamlFields = (
     spec.uuid = ms.uuid;
   }
   if (options.includeApplication) {
-    spec.application = asString(ms?.application);
+    spec.application = dumpString(ms?.application);
+  } else if (options.templateMode && ms?.application) {
+    spec.application = dumpString(ms.application);
   }
   if (options.includeAgent !== false) {
+    spec.agent = {
+      name: resolveAgentName(ms, activeAgents, reducedAgents),
+    };
+  } else if (
+    options.templateMode &&
+    (ms?.agentName || ms?.agent?.name)
+  ) {
     spec.agent = {
       name: resolveAgentName(ms, activeAgents, reducedAgents),
     };
   }
 
   spec.images = buildImagesYaml(ms);
+  const natsAccess = ms?.natsConfig?.natsAccess ?? ms?.natsAccess;
   spec.natsConfig = {
-    natsAccess: asBoolean(ms?.natsConfig?.natsAccess ?? ms?.natsAccess),
+    natsAccess: dumpBoolean(natsAccess),
     ...(ms?.natsConfig?.natsRule
       ? { natsRule: ms.natsConfig.natsRule }
       : {}),

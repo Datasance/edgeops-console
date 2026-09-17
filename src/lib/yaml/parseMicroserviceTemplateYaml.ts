@@ -9,15 +9,12 @@ import {
   buildMicroserviceYamlFields,
   dumpAnnotatedYaml,
 } from "./microserviceYAML";
+import {
+  dumpTemplateSchemaVariables,
+  normalizeTemplateSchemaVariables,
+} from "./templateSchemaVariables";
 
-const IDENTITY_FIELDS = [
-  "name",
-  "application",
-  "iofogUuid",
-  "agentName",
-  "flowId",
-  "template",
-];
+const IDENTITY_FIELDS = ["name", "iofogUuid", "flowId", "template"];
 
 const _deleteUndefinedFields = (obj: Record<string, unknown>) => {
   Object.keys(obj).forEach((key) => obj[key] === undefined && delete obj[key]);
@@ -65,31 +62,18 @@ export const parseMicroserviceTemplateYaml = async (
   }
 
   const microservice = stripInstanceIdentity(
-    await parseMicroservice(spec.microservice),
+    await parseMicroservice(spec.microservice, { templateMode: true }),
   );
 
   const apiObject: Record<string, unknown> = {
     name,
     description: spec.description,
-    variables: spec.variables,
+    variables: normalizeTemplateSchemaVariables(spec.variables),
     microservice,
   };
   _deleteUndefinedFields(apiObject);
 
   return [apiObject, null];
-};
-
-const dumpVariables = (variables: unknown) => {
-  if (!Array.isArray(variables)) {
-    return variables;
-  }
-  return variables.map((variable: any) => ({
-    key: variable.key,
-    ...(variable.description != null && { description: variable.description }),
-    ...(variable.defaultValue !== undefined && {
-      defaultValue: variable.defaultValue,
-    }),
-  }));
 };
 
 export const dumpMicroserviceTemplateYaml = (template: any): string => {
@@ -100,19 +84,19 @@ export const dumpMicroserviceTemplateYaml = (template: any): string => {
       includeUuid: false,
       includeApplication: false,
       includeAgent: false,
+      templateMode: true,
     },
   );
 
-  const spec: Record<string, unknown> = {
-    microservice: microserviceSpec,
-  };
+  const spec: Record<string, unknown> = {};
   if (template?.description != null && template.description !== "") {
     spec.description = template.description;
   }
-  const variables = dumpVariables(template?.variables);
+  const variables = dumpTemplateSchemaVariables(template?.variables);
   if (variables != null) {
     spec.variables = variables;
   }
+  spec.microservice = microserviceSpec;
 
   return dumpAnnotatedYaml({
     apiVersion: CANONICAL_DISPLAY_CONTROLLER_API_VERSION,

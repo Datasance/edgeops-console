@@ -25,6 +25,7 @@ import { parseModelYaml } from "./parseModelYaml";
 import { parseRuntimeClassYaml } from "./parseRuntimeClassYaml";
 import { parseMicroserviceTemplateYaml } from "./parseMicroserviceTemplateYaml";
 import { applyMicroserviceFqName } from "./ApplicationParser";
+import { normalizeTemplateSchemaVariables } from "./templateSchemaVariables";
 
 export type ResourceKind =
   | "Service"
@@ -217,7 +218,7 @@ async function routeToParser(
           ...lget(doc, "spec.application", {}),
           microservices: await Promise.all(
             (lget(doc, "spec.application.microservices", []) || []).map(
-              async (m: any) => parseMicroservice(m),
+              async (m: any) => parseMicroservice(m, { templateMode: true }),
             ),
           ),
         };
@@ -225,7 +226,9 @@ async function routeToParser(
           name: lget(doc, "metadata.name", lget(doc, "spec.name", undefined)),
           description: lget(doc, "spec.description", ""),
           application,
-          variables: lget(doc, "spec.variables", []),
+          variables:
+            normalizeTemplateSchemaVariables(lget(doc, "spec.variables")) ??
+            [],
         };
         return [applicationTemplate, null] as [any, string | null];
       }
